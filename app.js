@@ -315,7 +315,7 @@
       var cells = ['lo', 'hi', 's'].map(function (f) {
         return el('td', { class: 'inp' }, [el('span', { class: 'num', text: numStr(rr[f]) })]);
       });
-      tb.appendChild(el('tr', null, [el('td', null, [nameNode(m), el('span', { class: 'trange', text: m.unit || '\u00a0' })])].concat(cells)));
+      tb.appendChild(el('tr', null, [el('td', null, [nameNode(m), el('span', { class: m.unit ? 'trange' : 'trange trange-none', text: m.unit || '\u00a0' })])].concat(cells)));
     });
   }
 

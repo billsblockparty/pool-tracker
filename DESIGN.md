@@ -51,10 +51,11 @@ Radius: panels 6px; tooltip 4px; stat grid inner 4px. Borders: panels 2px frame;
 - Latest results table: columns are test, value, status and change. Below 560px tests use short names; below 900px the range sits under the name, and from 900px it gets its own column.
 - Charts: one per measurement (temp and LSI only once data exists). Shared time axis; band behind the line; points coloured by status. Tooltip on hover, tap or focus.
 - History: one row per test, newest first. Readings in a responsive label/value grid; out-of-range values get colour, icon and Lo/Hi.
-- Range editor (read-only): same table as before; each Low/High/Margin value is a right-aligned `.num` span in --c-text, 13px, tabular figures; cell padding 8px top/bottom, matching the other tables. No inputs or buttons.
+- Range editor (read-only): same table as before; each Low/High/Margin value is a right-aligned `.num` span in --c-text, 13px, tabular figures; cell padding 8px top/bottom, matching the other tables. No inputs or buttons. Units: below 900px under the name (as before); at 900px and up inline after the name (`.re .trange` display inline, margin-left 4px, line-height 1 so row height is unchanged; 11px, --c-text-dim). Tests without a unit (pH, LSI) show nothing (`.trange-none`). Latest results keeps its range line hidden at 900px+.
 
 ## Decisions
 - Hand-built page, not the Dashboard type: the type can't take the custom tokens.
+- Units shown beside names in Ideal ranges at 900px+, because ppb (phosphates) vs ppm was ambiguous without them.
 - GitHub Pages, so anyone with the link can view without a Claude sign-in. Data moved from the artifact database to JSON files; range editing removed from the page (changes go through the builder).
 - History is a per-test grid, not a wide table, so it fits 360px without scrolling sideways.
 - Change arrows (▲▼) are neutral text, not status colours.
@@ -64,3 +65,4 @@ Radius: panels 6px; tooltip 4px; stat grid inner 4px. Borders: panels 2px frame;
 - 2026-11-06: built page; seeded 11/06 test.
 - 2026-11-06: removed pool-details subtitle; source labels made generic ("Store" / "Home kit"); "Store recommendations" heading; store brand names removed from the 11/06 recommendations text. No size, colour or spacing changes.
 - 2026-11-06: moved to GitHub Pages (billsblockparty/pool-tracker). Data from data/tests.json (11/06 exported exactly as stored; 11/01 pending confirmation); no ranges.json, defaults from calc.js; range editor read-only; Save/Reset row and input/button styles removed; .re cell padding 4px -> 8px; .nojekyll added.
+- 2026-11-06: Ideal ranges shows units inline after the name at >=900px (pH/LSI none); <900px and Latest results unchanged. Name/unit baseline delta 0px.
