@@ -90,6 +90,27 @@ th.num { text-align: right; }
 @media (max-width: 400px) { th, td { padding-left: 6px; padding-right: 6px; } }
 .derived .tname { color: var(--c-text-dim); }
 
+/* Latest results: one tbody per test; row 2 = range bar line (<900px) */
+#latest td { border-bottom: 0; }
+#latest tbody tr td { background: transparent; }
+#latest tbody:nth-of-type(even) tr td { background: var(--c-row-alt); }
+#latest tr.r1 td { padding-top: var(--s2); padding-bottom: var(--s1); }
+#latest tr.r2 td { padding-top: 0; padding-bottom: var(--s2); border-bottom: var(--b-row); }
+#latest tbody:last-child tr.r2 td { border-bottom: 0; }
+.rbar { display: flex; align-items: center; gap: var(--s2); }
+.rbar svg { flex: 1 1 0; width: 0; min-width: 140px; height: 16px; display: block; }
+.rbar .track { fill: var(--c-divider); }
+.rbar .band { fill: var(--c-band); }
+.rbar .pin { fill: var(--c-text-dim); font: 400 var(--f-xs) var(--font); }
+.rtext { flex: 0 0 auto; font-size: var(--f-xs); white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--c-text-dim); text-align: right; }
+.rtext .rdist { color: var(--c-text); }
+@media (min-width: 900px) {
+  #latest tr.r2 { display: none; }
+  #latest tr.r1 td { padding-bottom: var(--s2); border-bottom: var(--b-row); }
+  #latest tbody:last-child tr.r1 td { border-bottom: 0; }
+  #latest td.col-range { min-width: 260px; }
+}
+
 /* Trend charts */
 .charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1px; background: var(--c-divider);
   border-top: var(--b-row); }
@@ -103,9 +124,9 @@ th.num { text-align: right; }
 .chart .grid { stroke: var(--c-row-alt); stroke-width: 1; }
 .chart .band { fill: var(--c-band); }
 .chart .line { fill: none; stroke: var(--c-line); stroke-width: 2; stroke-linejoin: round; }
-.chart .pt { stroke: var(--c-frame); stroke-width: 2; }
-.chart .pt-ok { fill: var(--c-ok); } .chart .pt-warn { fill: var(--c-warn); } .chart .pt-bad { fill: var(--c-bad); }
-.chart .pt-na { fill: var(--c-line); }
+.pt { stroke: var(--c-frame); stroke-width: 2; }
+.pt-ok { fill: var(--c-ok); } .pt-warn { fill: var(--c-warn); } .pt-bad { fill: var(--c-bad); }
+.pt-na { fill: var(--c-line); }
 .chart .hit { fill: transparent; cursor: pointer; }
 .chart .hit:focus { outline: none; }
 .chart .hit:focus-visible { stroke: var(--c-accent); stroke-width: 2; }
@@ -167,7 +188,7 @@ footer a { color: var(--c-accent); }
     <div class="ph"><h2 id="h-latest">Latest results</h2><span class="legend" id="latest-when"></span></div>
     <table id="latest">
       <thead><tr>
-        <th>Test</th><th class="col-range">Ideal range</th><th class="num">Value</th><th>Status</th><th class="num">Change</th>
+        <th>Test</th><th class="col-range">Range</th><th class="num">Value</th><th>Status</th><th class="num">Change</th>
       </tr></thead>
       <tbody></tbody>
     </table>

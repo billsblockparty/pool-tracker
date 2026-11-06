@@ -69,6 +69,13 @@
   function nameNode(m) {
     return el('span', { class: 'tname' }, [el('span', { class: 'full', text: m.name }), el('span', { class: 'abbr', text: m.short })]);
   }
+  // Status shape: circle = in range / no range, diamond = slightly out, square = well out.
+  function shape(level, cx, cy) {
+    var c = 'pt pt-' + level;
+    if (level === 'warn') return sv('polygon', { class: c, points: [[cx, cy - 6], [cx + 6, cy], [cx, cy + 6], [cx - 6, cy]].map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') });
+    if (level === 'bad') return sv('rect', { class: c, x: (cx - 4.5).toFixed(2), y: (cy - 4.5).toFixed(2), width: 9, height: 9 });
+    return sv('circle', { class: c, cx: cx, cy: cy, r: 4.5 });
+  }
   function hasAny(k) { return state.tests.some(function (t) { return C.value(t, k) !== null; }); }
 
   // ---------- render ----------
@@ -122,21 +129,84 @@
     S.appendChild(stat('Tests', String(state.tests.length), 'since ' + dShort(state.tests[0].date)));
   }
 
+  // Range bar line: bar (SVG, drawn after layout) + range text with distance when out.
+  function barInfo(t, m) {
+    var r = state.ranges;
+    if (m.k === 'temp') return { note: 'no ideal range' };
+    var v = C.value(t, m.k);
+    if (v === null) return { note: m.k === 'lsi' ? 'needs water temp' : 'not tested' };
+    var s = C.status(t, m.k, r), bLo, bHi, sLo, sHi, dist = null;
+    if (m.k === 'tc') {
+      var fc = C.value(t, 'fc'), cc = C.value(t, 'cc');
+      bLo = fc; bHi = fc + r.cc.hi; sLo = Math.min(fc, v); sHi = fc + r.cc.hi + r.cc.s;
+      if (s.dir === 'high') dist = cc - r.cc.hi; else if (s.dir === 'low') dist = r.cc.lo - cc;
+    } else {
+      var rr = r[m.k];
+      bLo = rr.lo; bHi = rr.hi; sLo = rr.lo - rr.s; sHi = rr.hi + rr.s;
+      if (s.dir === 'high') dist = v - rr.hi; else if (s.dir === 'low') dist = rr.lo - v;
+    }
+    var w = bHi - bLo, pin = null;
+    if (v > bHi + 4 * w) pin = 'hi'; else if (v < bLo - 4 * w) pin = 'lo';
+    if (!pin) { sLo = Math.min(sLo, v); sHi = Math.max(sHi, v); }
+    var pad = (sHi - sLo) * 0.08; sLo -= pad; sHi += pad;
+    if (m.k !== 'lsi') sLo = Math.max(0, sLo);
+    return { v: v, s: s, bLo: bLo, bHi: bHi, sLo: sLo, sHi: sHi, pin: pin,
+      dist: dist === null ? null : C.fmt(Math.round(dist * 1e6) / 1e6, m.dp) + (s.dir === 'high' ? ' high' : ' low') };
+  }
+  function barLine(t, m) {
+    var info = barInfo(t, m), line = el('div', { class: 'rbar' });
+    if (info.note) { line.appendChild(el('span', { class: 'rtext', text: info.note })); return line; }
+    var svg = sv('svg', { height: 16, role: 'img', 'aria-label': m.name + ' ' + C.show(t, m) + ' against ideal range ' + rangeText(m) });
+    svg.__info = info;
+    line.appendChild(svg);
+    var tx = el('span', { class: 'rtext', text: rangeText(m) });
+    if (info.dist) { tx.appendChild(document.createTextNode(' · ')); tx.appendChild(el('span', { class: 'rdist', text: info.dist })); }
+    line.appendChild(tx);
+    return line;
+  }
+  var clipN = 0;
+  function drawBars() {
+    // One shared width for the range text (widest visible), so every bar has the same start and end.
+    var txts = Array.prototype.filter.call(document.querySelectorAll('#latest .rbar svg + .rtext'), function (e) { e.style.width = ''; return e.getBoundingClientRect().width > 0; });
+    var tw0 = Math.ceil(Math.max.apply(null, txts.map(function (e) { return e.getBoundingClientRect().width; }).concat([0])));
+    txts.forEach(function (e) { e.style.width = tw0 + 'px'; });
+    document.querySelectorAll('#latest .rbar svg').forEach(function (svg) {
+      var info = svg.__info, W = Math.round(svg.getBoundingClientRect().width);
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      if (!info || W <= 0) return;
+      svg.setAttribute('viewBox', '0 0 ' + W + ' 16');
+      var x0 = info.pin === 'lo' ? 10 : 0, x1 = W - (info.pin === 'hi' ? 10 : 0), tw = x1 - x0;
+      var X = function (v) { return x0 + (v - info.sLo) / (info.sHi - info.sLo) * tw; };
+      var id = 'rbclip' + (++clipN);
+      var cp = sv('clipPath', { id: id }); cp.appendChild(sv('rect', { x: x0, y: 4, width: tw, height: 8, rx: 4 }));
+      var defs = sv('defs', {}); defs.appendChild(cp); svg.appendChild(defs);
+      svg.appendChild(sv('rect', { class: 'track', x: x0, y: 4, width: tw, height: 8, rx: 4 }));
+      var bl = Math.max(x0, X(info.bLo)), br = Math.min(x1, X(info.bHi));
+      if (br > bl) svg.appendChild(sv('rect', { class: 'band', x: bl.toFixed(2), y: 4, width: (br - bl).toFixed(2), height: 8, 'clip-path': 'url(#' + id + ')' }));
+      var mx = info.pin === 'hi' ? x1 - 7 : info.pin === 'lo' ? x0 + 7 : Math.max(x0 + 7, Math.min(x1 - 7, X(info.v)));
+      svg.appendChild(shape(info.s.level, mx, 8));
+      if (info.pin) svg.appendChild(sv('text', { class: 'pin', x: info.pin === 'hi' ? W - 5 : 5, y: 12, 'text-anchor': 'middle', text: (info.pin === 'hi' ? '▶' : '◀') + VS }));
+    });
+  }
+
   function renderLatest(latest, prev) {
-    var tb = $('latest').tBodies[0]; clear(tb);
+    var table = $('latest');
+    Array.prototype.slice.call(table.tBodies).forEach(function (b) { table.removeChild(b); });
     $('latest-when').textContent = latest ? dLong(latest.date) + (latest.time ? ' · ' + tFmt(latest.time) : '') + (prev ? ' · change vs ' + dShort(prev.date) : '') : '';
-    if (!latest) return;
+    if (!latest) { table.appendChild(el('tbody')); return; }
     MEAS.forEach(function (m) {
       var s = C.status(latest, m.k, state.ranges);
-      var tr = el('tr', { class: m.derived ? 'derived' : '' }, [
-        el('td', null, [nameNode(m), el('span', { class: 'trange', text: rangeText(m) })]),
-        el('td', { class: 'col-range dim', text: rangeText(m) }),
+      var r1 = el('tr', { class: 'r1' + (m.derived ? ' derived' : '') }, [
+        el('td', null, [nameNode(m)]),
+        el('td', { class: 'col-range' }, [barLine(latest, m)]),
         el('td', { class: 'num', text: C.show(latest, m) }),
         el('td', null, [s.level === 'na' || m.norange ? el('span', { class: 'st st-na', text: '—' }) : statusNode(s)]),
         el('td', { class: 'num', text: deltaText(C.delta(latest, prev, m.k), m) })
       ]);
-      tb.appendChild(tr);
+      var r2 = el('tr', { class: 'r2' }, [el('td', { colspan: '4' }, [barLine(latest, m)])]);
+      table.appendChild(el('tbody', null, [r1, r2]));
     });
+    drawBars();
   }
 
   function renderRec(latest) {
@@ -243,7 +313,7 @@
     pts.forEach(function (p) {
       var s = m.norange ? { level: 'na', dir: null } : C.status(p.t, m.k, r);
       var cx = X(p.x), cy = Y(p.v);
-      svg.appendChild(sv('circle', { class: 'pt pt-' + s.level, cx: cx, cy: cy, r: 4.5 }));
+      svg.appendChild(shape(s.level, cx, cy));
       var label = dShort(p.t.date) + ' · ' + C.show(p.t, m) + (m.unit ? ' ' + m.unit : '') + (m.norange ? '' : ' · ' + word(s));
       var hit = sv('circle', { class: 'hit', cx: cx, cy: cy, r: 14, tabindex: '0', 'aria-label': m.name + ' ' + label });
       var show = function () {
@@ -323,7 +393,7 @@
   var lastW = window.innerWidth, rt = null;
   window.addEventListener('resize', function () {
     if (window.innerWidth === lastW) return; lastW = window.innerWidth;
-    clearTimeout(rt); rt = setTimeout(renderCharts, 120);
+    clearTimeout(rt); rt = setTimeout(function () { renderCharts(); drawBars(); }, 120);
   });
 
   // ---------- data (static JSON files) ----------
