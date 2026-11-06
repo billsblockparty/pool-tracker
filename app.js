@@ -393,8 +393,20 @@
   var lastW = window.innerWidth, rt = null;
   window.addEventListener('resize', function () {
     if (window.innerWidth === lastW) return; lastW = window.innerWidth;
-    clearTimeout(rt); rt = setTimeout(function () { renderCharts(); drawBars(); }, 120);
+    clearTimeout(rt); rt = setTimeout(renderCharts, 120);
   });
+
+  // Redraw bars whenever the Latest results table changes width (resize, rotation, row 2 shown or hidden at 900px).
+  if (typeof ResizeObserver === 'function') {
+    var lastTW = -1, rq = 0;
+    new ResizeObserver(function (entries) {
+      var w = Math.round(entries[0].contentRect.width);
+      if (w === lastTW) return; lastTW = w;
+      cancelAnimationFrame(rq); rq = requestAnimationFrame(drawBars);
+    }).observe($('latest'));
+  } else {
+    window.addEventListener('resize', function () { setTimeout(drawBars, 120); });
+  }
 
   // ---------- data (static JSON files) ----------
   renderAll(); renderEditor();
