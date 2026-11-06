@@ -129,64 +129,100 @@
     S.appendChild(stat('Tests', String(state.tests.length), 'since ' + dShort(state.tests[0].date)));
   }
 
-  // Range bar line: bar (SVG, drawn after layout) + range text with distance when out.
+  // Range bar (v2): a zoned gauge, not a linear axis. Fixed fractions of the track:
+  // 0-.15 well out low | .15-.30 margin low | .30-.70 ideal | .70-.85 margin high | .85-1 well out high.
+  // Margin zones span the margin (or half the range if the margin is 0); well-out zones span twice that.
+  var Z = { wl: 0, ml: 0.15, lo: 0.30, hi: 0.70, mh: 0.85, wh: 1 };
+  function gaugePos(v, lo, hi, m) {
+    if (v < lo) {
+      var d = lo - v;
+      if (d <= m) return { f: Z.lo - (Z.lo - Z.ml) * d / m };
+      if (d <= 3 * m) return { f: Z.ml - (Z.ml - Z.wl) * (d - m) / (2 * m) };
+      return { f: 0, pin: 'lo' };
+    }
+    if (v > hi) {
+      var u = v - hi;
+      if (u <= m) return { f: Z.hi + (Z.mh - Z.hi) * u / m };
+      if (u <= 3 * m) return { f: Z.mh + (Z.wh - Z.mh) * (u - m) / (2 * m) };
+      return { f: 1, pin: 'hi' };
+    }
+    return { f: Z.lo + (Z.hi - Z.lo) * (hi > lo ? (v - lo) / (hi - lo) : 0.5) };
+  }
   function barInfo(t, m) {
     var r = state.ranges;
     if (m.k === 'temp') return { note: 'no ideal range' };
     var v = C.value(t, m.k);
     if (v === null) return { note: m.k === 'lsi' ? 'needs water temp' : 'not tested' };
-    var s = C.status(t, m.k, r), bLo, bHi, sLo, sHi, dist = null;
+    var s = C.status(t, m.k, r), lo, hi, mg, loL, hiL, dist = null;
     if (m.k === 'tc') {
       var fc = C.value(t, 'fc'), cc = C.value(t, 'cc');
-      bLo = fc; bHi = fc + r.cc.hi; sLo = Math.min(fc, v); sHi = fc + r.cc.hi + r.cc.s;
+      lo = fc; hi = fc + r.cc.hi; mg = r.cc.s;
+      loL = C.fmt(lo, m.dp); hiL = C.fmt(hi, m.dp);
       if (s.dir === 'high') dist = cc - r.cc.hi; else if (s.dir === 'low') dist = r.cc.lo - cc;
     } else {
       var rr = r[m.k];
-      bLo = rr.lo; bHi = rr.hi; sLo = rr.lo - rr.s; sHi = rr.hi + rr.s;
-      if (s.dir === 'high') dist = v - rr.hi; else if (s.dir === 'low') dist = rr.lo - v;
+      lo = rr.lo; hi = rr.hi; mg = rr.s;
+      loL = numStr(lo); hiL = (m.k === 'lsi' && hi > 0 ? '+' : '') + numStr(hi);
+      if (s.dir === 'high') dist = v - hi; else if (s.dir === 'low') dist = lo - v;
     }
-    var w = bHi - bLo, pin = null;
-    if (v > bHi + 4 * w) pin = 'hi'; else if (v < bLo - 4 * w) pin = 'lo';
-    if (!pin) { sLo = Math.min(sLo, v); sHi = Math.max(sHi, v); }
-    var pad = (sHi - sLo) * 0.08; sLo -= pad; sHi += pad;
-    if (m.k !== 'lsi') sLo = Math.max(0, sLo);
-    return { v: v, s: s, bLo: bLo, bHi: bHi, sLo: sLo, sHi: sHi, pin: pin,
+    if (!(mg > 0)) mg = (hi - lo) / 2;
+    var g = gaugePos(v, lo, hi, mg);
+    return { v: v, s: s, f: g.f, pin: g.pin || null, loL: loL, hiL: hiL,
       dist: dist === null ? null : C.fmt(Math.round(dist * 1e6) / 1e6, m.dp) + (s.dir === 'high' ? ' high' : ' low') };
   }
   function barLine(t, m) {
     var info = barInfo(t, m), line = el('div', { class: 'rbar' });
-    if (info.note) { line.appendChild(el('span', { class: 'rtext', text: info.note })); return line; }
-    var svg = sv('svg', { height: 16, role: 'img', 'aria-label': m.name + ' ' + C.show(t, m) + ' against ideal range ' + rangeText(m) });
+    if (info.note) { line.appendChild(el('span', { class: 'rnote', text: info.note })); return line; }
+    var svg = sv('svg', { height: 30, role: 'img', 'aria-label': m.name + ' ' + C.show(t, m) + ', ideal ' + rangeText(m) + (info.dist ? ', ' + info.dist : '') });
     svg.__info = info;
     line.appendChild(svg);
-    var tx = el('span', { class: 'rtext', text: rangeText(m) });
-    if (info.dist) { tx.appendChild(document.createTextNode(' · ')); tx.appendChild(el('span', { class: 'rdist', text: info.dist })); }
-    line.appendChild(tx);
+    line.appendChild(el('span', { class: 'rtext', text: info.dist || '' }));
     return line;
   }
-  var clipN = 0;
+  var INSET = 7; // room for markers centred on the track ends
   function drawBars() {
-    // One shared width for the range text (widest visible), so every bar has the same start and end.
-    var txts = Array.prototype.filter.call(document.querySelectorAll('#latest .rbar svg + .rtext'), function (e) { e.style.width = ''; return e.getBoundingClientRect().width > 0; });
+    // Distance text: one shared width (widest visible), so every bar starts and ends on the same edges.
+    var txts = Array.prototype.filter.call(document.querySelectorAll('#latest .rbar svg + .rtext'), function (e) {
+      e.style.width = ''; return e.offsetParent !== null; });
     var tw0 = Math.ceil(Math.max.apply(null, txts.map(function (e) { return e.getBoundingClientRect().width; }).concat([0])));
     txts.forEach(function (e) { e.style.width = tw0 + 'px'; });
+    alignUnits();
     document.querySelectorAll('#latest .rbar svg').forEach(function (svg) {
       var info = svg.__info, W = Math.round(svg.getBoundingClientRect().width);
       while (svg.firstChild) svg.removeChild(svg.firstChild);
       if (!info || W <= 0) return;
-      svg.setAttribute('viewBox', '0 0 ' + W + ' 16');
-      var x0 = info.pin === 'lo' ? 10 : 0, x1 = W - (info.pin === 'hi' ? 10 : 0), tw = x1 - x0;
-      var X = function (v) { return x0 + (v - info.sLo) / (info.sHi - info.sLo) * tw; };
-      var id = 'rbclip' + (++clipN);
-      var cp = sv('clipPath', { id: id }); cp.appendChild(sv('rect', { x: x0, y: 4, width: tw, height: 8, rx: 4 }));
-      var defs = sv('defs', {}); defs.appendChild(cp); svg.appendChild(defs);
+      svg.setAttribute('viewBox', '0 0 ' + W + ' 30');
+      var x0 = INSET, x1 = W - INSET, tw = x1 - x0;
+      var X = function (f) { return x0 + f * tw; };
       svg.appendChild(sv('rect', { class: 'track', x: x0, y: 4, width: tw, height: 8, rx: 4 }));
-      var bl = Math.max(x0, X(info.bLo)), br = Math.min(x1, X(info.bHi));
-      if (br > bl) svg.appendChild(sv('rect', { class: 'band', x: bl.toFixed(2), y: 4, width: (br - bl).toFixed(2), height: 8, 'clip-path': 'url(#' + id + ')' }));
-      var mx = info.pin === 'hi' ? x1 - 7 : info.pin === 'lo' ? x0 + 7 : Math.max(x0 + 7, Math.min(x1 - 7, X(info.v)));
-      svg.appendChild(shape(info.s.level, mx, 8));
-      if (info.pin) svg.appendChild(sv('text', { class: 'pin', x: info.pin === 'hi' ? W - 5 : 5, y: 12, 'text-anchor': 'middle', text: (info.pin === 'hi' ? '▶' : '◀') + VS }));
+      var bl = X(Z.lo), br = X(Z.hi);
+      svg.appendChild(sv('rect', { class: 'band', x: bl.toFixed(2), y: 4, width: (br - bl).toFixed(2), height: 8 }));
+      // band limits under the band edges; clamp to track ends; merge when closer than 8px
+      var L = sv('text', { class: 'blab', x: bl.toFixed(2), y: 24, 'text-anchor': 'middle', text: info.loL });
+      var R = sv('text', { class: 'blab', x: br.toFixed(2), y: 24, 'text-anchor': 'middle', text: info.hiL });
+      svg.appendChild(L); svg.appendChild(R);
+      var lw = L.getComputedTextLength(), rw = R.getComputedTextLength();
+      if (bl - lw / 2 < x0) { L.setAttribute('x', x0); L.setAttribute('text-anchor', 'start'); }
+      if (br + rw / 2 > x1) { R.setAttribute('x', x1); R.setAttribute('text-anchor', 'end'); }
+      if ((br - rw / 2) - (bl + lw / 2) < 8) {
+        svg.removeChild(L); svg.removeChild(R);
+        svg.appendChild(sv('text', { class: 'blab', x: ((bl + br) / 2).toFixed(2), y: 24, 'text-anchor': 'middle', text: info.loL + '–' + info.hiL }));
+        svg.__merged = true;
+      } else svg.__merged = false;
+      svg.appendChild(shape(info.s.level, X(info.f), 8));
+      if (info.pin) svg.appendChild(sv('text', { class: 'pin', x: info.pin === 'hi' ? x1 : x0, y: 24, 'text-anchor': 'middle', text: (info.pin === 'hi' ? '▶' : '◀') + VS }));
     });
+  }
+  // Value cell: number + fixed unit slot (widest unit), so numbers share one right edge and units one left edge.
+  function alignUnits() {
+    var us = Array.prototype.slice.call(document.querySelectorAll('#latest .vunit'));
+    us.forEach(function (u) { u.style.width = ''; });
+    var w = Math.ceil(Math.max.apply(null, us.map(function (u) { return u.getBoundingClientRect().width; }).concat([0])));
+    us.forEach(function (u) { u.style.width = w + 'px'; });
+  }
+  function valueNode(t, m) {
+    var v = C.show(t, m), has = C.value(t, m.k) !== null;
+    return [el('span', { class: 'vnum', text: v }), el('span', { class: 'vunit', text: has && m.unit ? m.unit : '' })];
   }
 
   function renderLatest(latest, prev) {
@@ -199,7 +235,7 @@
       var r1 = el('tr', { class: 'r1' + (m.derived ? ' derived' : '') }, [
         el('td', null, [nameNode(m)]),
         el('td', { class: 'col-range' }, [barLine(latest, m)]),
-        el('td', { class: 'num', text: C.show(latest, m) }),
+        el('td', { class: 'num vcell' }, valueNode(latest, m)),
         el('td', null, [s.level === 'na' || m.norange ? el('span', { class: 'st st-na', text: '—' }) : statusNode(s)]),
         el('td', { class: 'num', text: deltaText(C.delta(latest, prev, m.k), m) })
       ]);

@@ -97,13 +97,14 @@ th.num { text-align: right; }
 #latest tr.r1 td { padding-top: var(--s2); padding-bottom: var(--s1); }
 #latest tr.r2 td { padding-top: 0; padding-bottom: var(--s2); border-bottom: var(--b-row); }
 #latest tbody:last-child tr.r2 td { border-bottom: 0; }
-.rbar { display: flex; align-items: center; gap: var(--s2); }
-.rbar svg { flex: 1 1 0; width: 0; min-width: 140px; height: 16px; display: block; }
+.rbar { display: flex; align-items: flex-start; gap: var(--s2); }
+.rbar svg { flex: 1 1 0; width: 0; min-width: 140px; height: 30px; display: block; overflow: visible; }
 .rbar .track { fill: var(--c-divider); }
 .rbar .band { fill: var(--c-band); }
-.rbar .pin { fill: var(--c-text-dim); font: 400 var(--f-xs) var(--font); }
-.rtext { flex: 0 0 auto; font-size: var(--f-xs); white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--c-text-dim); text-align: right; }
-.rtext .rdist { color: var(--c-text); }
+.rbar .blab, .rbar .pin { fill: var(--c-text-dim); font: 400 var(--f-xs) var(--font); font-variant-numeric: tabular-nums; }
+.rtext { flex: 0 0 auto; font-size: var(--f-xs); line-height: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--c-text); text-align: right; }
+.rnote { font-size: var(--f-xs); white-space: nowrap; color: var(--c-text-dim); }
+#latest .vunit { display: inline-block; margin-left: 3px; text-align: left; font-size: var(--f-xs); color: var(--c-text-dim); }
 @media (min-width: 900px) {
   #latest tr.r2 { display: none; }
   #latest tr.r1 td { padding-bottom: var(--s2); border-bottom: var(--b-row); }
