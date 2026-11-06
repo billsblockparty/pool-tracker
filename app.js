@@ -168,79 +168,101 @@
     if (!(mg > 0)) mg = (hi - lo) / 2;
     var g = gaugePos(v, lo, hi, mg);
     return { v: v, s: s, f: g.f, pin: g.pin || null, loL: loL, hiL: hiL,
+      distN: dist === null ? null : C.fmt(Math.round(dist * 1e6) / 1e6, m.dp),
       dist: dist === null ? null : C.fmt(Math.round(dist * 1e6) / 1e6, m.dp) + (s.dir === 'high' ? ' high' : ' low') };
   }
-  function barLine(t, m) {
-    var info = barInfo(t, m), line = el('div', { class: 'rbar' });
-    if (info.note) { line.appendChild(el('span', { class: 'rnote', text: info.note })); return line; }
-    var svg = sv('svg', { height: 30, role: 'img', 'aria-label': m.name + ' ' + C.show(t, m) + ', ideal ' + rangeText(m) + (info.dist ? ', ' + info.dist : '') });
-    svg.__info = info;
-    line.appendChild(svg);
-    line.appendChild(el('span', { class: 'rtext', text: info.dist || '' }));
-    return line;
+  // ---------- Latest results v3: grouped blocks ----------
+  var LNAME = { fc: ['Free chlorine', 'FC'], tc: ['Total chlorine', 'TC'], cc: ['Combined chlorine', 'CC'], ph: ['pH', null],
+    ta: ['Total alkalinity', 'TA'], ch: ['Calcium hardness', 'CH'], cya: ['Cyanuric acid', 'CYA'], lsi: ['Saturation index', 'LSI'],
+    fe: ['Iron', 'Fe'], cu: ['Copper', 'Cu'], po4: ['Phosphates', 'PO₄'], salt: ['Salt', null], temp: ['Water temperature', null] };
+  var GROUPS = [['Sanitiser', ['fc', 'tc', 'cc']], ['Water balance', ['ph', 'ta', 'ch', 'cya', 'lsi']], ['Metals & minerals', ['fe', 'cu', 'po4', 'salt', 'temp']]];
+  var MBY = {}; MEAS.forEach(function (m) { MBY[m.k] = m; });
+
+  function phrase(info) {
+    var s = info.s;
+    var words = s.level === 'ok' ? 'In range' : (s.dir === 'low' ? 'Low' : 'High') + ' by ' + info.distN;
+    return el('span', { class: 'sp st-' + s.level }, [el('span', { class: 'ico', 'aria-hidden': 'true', text: ICON[s.level] }), words]);
   }
-  var INSET = 7; // room for markers centred on the track ends
+  function block(t, prev, m) {
+    var nm = LNAME[m.k], b = el('div', { class: 'blk' });
+    var name = el('span', { class: 'bn' }, [nm[0]]);
+    if (nm[1]) name.appendChild(el('span', { class: 'ab', text: ' (' + nm[1] + ')' }));
+    var right = null, v = C.value(t, m.k), info = null;
+    if (m.k === 'temp') {
+      right = v === null ? el('span', { class: 'rt dim', text: 'not recorded' }) : el('span', { class: 'rt' }, [C.show(t, m), el('span', { class: 'ru', text: m.unit })]);
+    } else if (v === null) {
+      right = el('span', { class: 'rt dim', text: m.k === 'lsi' ? 'needs water temp' : 'not recorded' });
+    } else {
+      info = barInfo(t, m);
+      right = phrase(info);
+    }
+    b.appendChild(el('div', { class: 'l1' }, [name, right]));
+    if (info) {
+      var svg = sv('svg', { class: 'lbar', height: 48, role: 'img', 'aria-label': nm[0] + ' ' + C.show(t, m) + (m.unit ? ' ' + m.unit : '') + ', ideal ' + rangeText(m) });
+      svg.__info = info; svg.__val = C.show(t, m); svg.__unit = m.unit || '';
+      b.appendChild(svg);
+      var d = C.delta(t, prev, m.k);
+      if (d !== null) b.appendChild(el('div', { class: 'l3', text: (Math.abs(d) < 1e-9 ? '= 0' : deltaText(d, m)) + ' since ' + dShort(prev.date) }));
+    }
+    return b;
+  }
+  var INSET = 7, TY = 22; // marker room at track ends; track top
   function drawBars() {
-    // Distance text: one shared width (widest visible), so every bar starts and ends on the same edges.
-    var txts = Array.prototype.filter.call(document.querySelectorAll('#latest .rbar svg + .rtext'), function (e) {
-      e.style.width = ''; return e.offsetParent !== null; });
-    var tw0 = Math.ceil(Math.max.apply(null, txts.map(function (e) { return e.getBoundingClientRect().width; }).concat([0])));
-    txts.forEach(function (e) { e.style.width = tw0 + 'px'; });
-    alignUnits();
-    document.querySelectorAll('#latest .rbar svg').forEach(function (svg) {
+    fillGrids();
+    document.querySelectorAll('#latest svg.lbar').forEach(function (svg) {
       var info = svg.__info, W = Math.round(svg.getBoundingClientRect().width);
       while (svg.firstChild) svg.removeChild(svg.firstChild);
       if (!info || W <= 0) return;
-      svg.setAttribute('viewBox', '0 0 ' + W + ' 30');
-      var x0 = INSET, x1 = W - INSET, tw = x1 - x0;
+      svg.setAttribute('viewBox', '0 0 ' + W + ' 48');
+      var x0 = INSET, x1 = W - INSET, tw = x1 - x0, cy = TY + 4;
       var X = function (f) { return x0 + f * tw; };
-      svg.appendChild(sv('rect', { class: 'track', x: x0, y: 4, width: tw, height: 8, rx: 4 }));
+      svg.appendChild(sv('rect', { class: 'track', x: x0, y: TY, width: tw, height: 8, rx: 4 }));
       var bl = X(Z.lo), br = X(Z.hi);
-      svg.appendChild(sv('rect', { class: 'band', x: bl.toFixed(2), y: 4, width: (br - bl).toFixed(2), height: 8 }));
-      // band limits under the band edges; clamp to track ends; merge when closer than 8px
-      var L = sv('text', { class: 'blab', x: bl.toFixed(2), y: 24, 'text-anchor': 'middle', text: info.loL });
-      var R = sv('text', { class: 'blab', x: br.toFixed(2), y: 24, 'text-anchor': 'middle', text: info.hiL });
+      svg.appendChild(sv('rect', { class: 'band', x: bl.toFixed(2), y: TY, width: (br - bl).toFixed(2), height: 8 }));
+      var LY = TY + 8 + 12;
+      var L = sv('text', { class: 'blab', x: bl.toFixed(2), y: LY, 'text-anchor': 'middle', text: info.loL });
+      var R = sv('text', { class: 'blab', x: br.toFixed(2), y: LY, 'text-anchor': 'middle', text: info.hiL });
       svg.appendChild(L); svg.appendChild(R);
       var lw = L.getComputedTextLength(), rw = R.getComputedTextLength();
       if (bl - lw / 2 < x0) { L.setAttribute('x', x0); L.setAttribute('text-anchor', 'start'); }
       if (br + rw / 2 > x1) { R.setAttribute('x', x1); R.setAttribute('text-anchor', 'end'); }
+      svg.__merged = false;
       if ((br - rw / 2) - (bl + lw / 2) < 8) {
-        svg.removeChild(L); svg.removeChild(R);
-        svg.appendChild(sv('text', { class: 'blab', x: ((bl + br) / 2).toFixed(2), y: 24, 'text-anchor': 'middle', text: info.loL + '–' + info.hiL }));
-        svg.__merged = true;
-      } else svg.__merged = false;
-      svg.appendChild(shape(info.s.level, X(info.f), 8));
-      if (info.pin) svg.appendChild(sv('text', { class: 'pin', x: info.pin === 'hi' ? x1 : x0, y: 24, 'text-anchor': 'middle', text: (info.pin === 'hi' ? '▶' : '◀') + VS }));
+        svg.removeChild(L); svg.removeChild(R); svg.__merged = true;
+        svg.appendChild(sv('text', { class: 'blab', x: ((bl + br) / 2).toFixed(2), y: LY, 'text-anchor': 'middle', text: info.loL + '–' + info.hiL }));
+      }
+      var mx = X(info.f);
+      svg.appendChild(shape(info.s.level, mx, cy));
+      if (info.pin) svg.appendChild(sv('text', { class: 'pin', x: info.pin === 'hi' ? x1 : x0, y: LY, 'text-anchor': 'middle', text: (info.pin === 'hi' ? '▶' : '◀') + VS }));
+      // reading label above the marker: baseline 4px above the track top, kept inside the bar ends
+      var rl = sv('text', { x: 0, y: TY - 4, 'text-anchor': 'start' });
+      var tv = sv('tspan', { class: 'rv', text: svg.__val }); rl.appendChild(tv);
+      if (svg.__unit) { var tu = sv('tspan', { class: 'ru2', dx: 3, text: svg.__unit }); rl.appendChild(tu); }
+      svg.appendChild(rl);
+      var w = rl.getComputedTextLength() + (svg.__unit ? 3 : 0);
+      var lx = info.pin === 'hi' ? W - w : info.pin === 'lo' ? 0 : Math.max(0, Math.min(W - w, mx - w / 2));
+      rl.setAttribute('x', lx.toFixed(2));
+      svg.__label = { w: w, x: lx, mx: mx };
     });
   }
-  // Value cell: number + fixed unit slot (widest unit), so numbers share one right edge and units one left edge.
-  function alignUnits() {
-    var us = Array.prototype.slice.call(document.querySelectorAll('#latest .vunit'));
-    us.forEach(function (u) { u.style.width = ''; });
-    var w = Math.ceil(Math.max.apply(null, us.map(function (u) { return u.getBoundingClientRect().width; }).concat([0])));
-    us.forEach(function (u) { u.style.width = w + 'px'; });
-  }
-  function valueNode(t, m) {
-    var v = C.show(t, m), has = C.value(t, m.k) !== null;
-    return [el('span', { class: 'vnum', text: v }), el('span', { class: 'vunit', text: has && m.unit ? m.unit : '' })];
+  // Blank panel cells so a group's last grid row never shows divider colour.
+  function fillGrids() {
+    document.querySelectorAll('#latest .lgrid').forEach(function (g) {
+      g.querySelectorAll('.fill').forEach(function (f) { g.removeChild(f); });
+      var cols = getComputedStyle(g).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+      var n = g.querySelectorAll('.blk').length, k = (cols - n % cols) % cols;
+      for (var i = 0; i < k; i++) g.appendChild(el('div', { class: 'fill', 'aria-hidden': 'true' }));
+    });
   }
 
   function renderLatest(latest, prev) {
-    var table = $('latest');
-    Array.prototype.slice.call(table.tBodies).forEach(function (b) { table.removeChild(b); });
+    var host = $('latest'); clear(host);
     $('latest-when').textContent = latest ? dLong(latest.date) + (latest.time ? ' · ' + tFmt(latest.time) : '') + (prev ? ' · change vs ' + dShort(prev.date) : '') : '';
-    if (!latest) { table.appendChild(el('tbody')); return; }
-    MEAS.forEach(function (m) {
-      var s = C.status(latest, m.k, state.ranges);
-      var r1 = el('tr', { class: 'r1' + (m.derived ? ' derived' : '') }, [
-        el('td', null, [nameNode(m)]),
-        el('td', { class: 'col-range' }, [barLine(latest, m)]),
-        el('td', { class: 'num vcell' }, valueNode(latest, m)),
-        el('td', null, [s.level === 'na' || m.norange ? el('span', { class: 'st st-na', text: '—' }) : statusNode(s)]),
-        el('td', { class: 'num', text: deltaText(C.delta(latest, prev, m.k), m) })
-      ]);
-      var r2 = el('tr', { class: 'r2' }, [el('td', { colspan: '4' }, [barLine(latest, m)])]);
-      table.appendChild(el('tbody', null, [r1, r2]));
+    if (!latest) return;
+    GROUPS.forEach(function (g) {
+      var grid = el('div', { class: 'lgrid' });
+      g[1].forEach(function (k) { grid.appendChild(block(latest, prev, MBY[k])); });
+      host.appendChild(el('div', { class: 'grp' }, [el('h3', { class: 'grp-h', text: g[0] }), grid]));
     });
     drawBars();
   }

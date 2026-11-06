@@ -90,27 +90,30 @@ th.num { text-align: right; }
 @media (max-width: 400px) { th, td { padding-left: 6px; padding-right: 6px; } }
 .derived .tname { color: var(--c-text-dim); }
 
-/* Latest results: one tbody per test; row 2 = range bar line (<900px) */
-#latest td { border-bottom: 0; }
-#latest tbody tr td { background: transparent; }
-#latest tbody:nth-of-type(even) tr td { background: var(--c-row-alt); }
-#latest tr.r1 td { padding-top: var(--s2); padding-bottom: var(--s1); }
-#latest tr.r2 td { padding-top: 0; padding-bottom: var(--s2); border-bottom: var(--b-row); }
-#latest tbody:last-child tr.r2 td { border-bottom: 0; }
-.rbar { display: flex; align-items: flex-start; gap: var(--s2); }
-.rbar svg { flex: 1 1 0; width: 0; min-width: 140px; height: 30px; display: block; overflow: visible; }
-.rbar .track { fill: var(--c-divider); }
-.rbar .band { fill: var(--c-band); }
-.rbar .blab, .rbar .pin { fill: var(--c-text-dim); font: 400 var(--f-xs) var(--font); font-variant-numeric: tabular-nums; }
-.rtext { flex: 0 0 auto; font-size: var(--f-xs); line-height: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--c-text); text-align: right; }
-.rnote { font-size: var(--f-xs); white-space: nowrap; color: var(--c-text-dim); }
-#latest .vunit { display: inline-block; margin-left: 3px; text-align: left; font-size: var(--f-xs); color: var(--c-text-dim); }
-@media (min-width: 900px) {
-  #latest tr.r2 { display: none; }
-  #latest tr.r1 td { padding-bottom: var(--s2); border-bottom: var(--b-row); }
-  #latest tbody:last-child tr.r1 td { border-bottom: 0; }
-  #latest td.col-range { min-width: 260px; }
-}
+/* Latest results v3: grouped measurement blocks */
+.grp + .grp .grp-h { border-top: var(--b-row); }
+.grp-h { margin: 0; padding: var(--s3) var(--s3) var(--s1); font-size: var(--f-sm); font-weight: 600; color: var(--c-text-dim); }
+.lgrid { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--c-divider); border-top: var(--b-row); }
+@media (min-width: 900px) { .lgrid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1400px) { .lgrid { grid-template-columns: repeat(3, 1fr); } }
+.blk { background: var(--c-panel); padding: var(--s3); min-width: 0; }
+@media (max-width: 400px) { .blk { padding-left: var(--s2); padding-right: var(--s2); } }
+.blk .l1 { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); }
+.blk .bn { font-size: var(--f-md); font-weight: 600; color: var(--c-text); white-space: nowrap; }
+.blk .ab { font-weight: 400; color: var(--c-text-dim); }
+.blk .sp { font-size: var(--f-sm); font-weight: 600; white-space: nowrap; }
+.blk .sp .ico { min-width: 0; margin-right: 4px; }
+.blk .rt { font-size: var(--f-sm); white-space: nowrap; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.blk .rt.dim { color: var(--c-text-dim); }
+.blk .ru { font-size: var(--f-xs); color: var(--c-text-dim); margin-left: 3px; }
+.blk svg.lbar { display: block; width: 100%; height: 48px; margin-top: 6px; overflow: visible; }
+.lbar .track { fill: var(--c-divider); }
+.lbar .band { fill: var(--c-band); }
+.lbar .blab, .lbar .pin { fill: var(--c-text-dim); font: 400 var(--f-xs) var(--font); font-variant-numeric: tabular-nums; }
+.lbar .rv { fill: var(--c-text); font: 600 var(--f-sm) var(--font); font-variant-numeric: tabular-nums; }
+.lbar .ru2 { fill: var(--c-text-dim); font: 400 var(--f-xs) var(--font); }
+.blk .l3 { font-size: var(--f-xs); line-height: 11px; color: var(--c-text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; margin-top: -0.5px; }
+.lgrid .fill { background: var(--c-panel); }
 
 /* Trend charts */
 .charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1px; background: var(--c-divider);
@@ -187,12 +190,7 @@ footer a { color: var(--c-accent); }
 
   <section class="panel" aria-labelledby="h-latest">
     <div class="ph"><h2 id="h-latest">Latest results</h2><span class="legend" id="latest-when"></span></div>
-    <table id="latest">
-      <thead><tr>
-        <th>Test</th><th class="col-range">Range</th><th class="num">Value</th><th>Status</th><th class="num">Change</th>
-      </tr></thead>
-      <tbody></tbody>
-    </table>
+    <div id="latest"></div>
   </section>
 
   <section class="panel" aria-labelledby="h-rec" id="rec-panel" hidden>
