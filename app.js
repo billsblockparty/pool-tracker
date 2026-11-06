@@ -402,7 +402,7 @@
     new ResizeObserver(function (entries) {
       var w = Math.round(entries[0].contentRect.width);
       if (w === lastTW) return; lastTW = w;
-      cancelAnimationFrame(rq); rq = requestAnimationFrame(drawBars);
+      clearTimeout(rq); rq = setTimeout(drawBars, 0);
     }).observe($('latest'));
   } else {
     window.addEventListener('resize', function () { setTimeout(drawBars, 120); });
