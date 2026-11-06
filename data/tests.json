@@ -1,0 +1,28 @@
+[
+  {
+    "id": "t-20261106-1216",
+    "ch": 671,
+    "createdAt": "2026-11-06T20:26:00Z",
+    "cu": 0.3,
+    "cya": 5,
+    "date": "2026-11-06",
+    "edits": [
+      {
+        "at": "2026-11-06T20:31:00Z",
+        "what": "De-identified: source Leslie's -> Store; store brand names removed from recommendations. No readings changed."
+      }
+    ],
+    "fc": 0.25,
+    "fe": 0.1,
+    "nextTest": "2026-11-13",
+    "ph": 8.7,
+    "po4": 0,
+    "recommendations": "Weekly maintenance routine (report page 1; pages 2–3 not provided):\n1. Sanitize: adjust the salt chlorine generator to keep 1–4 ppm free chlorine.\n2. Shock: add 10 oz of store-brand shock weekly.\n3. Prevent: add 5 fl oz of store-brand weekly maintenance treatment every week.\nPro tip: for heavy use, swimming animals or significant debris, add 3 fl oz of store-brand algaecide weekly.\nProblems reported: N/A.",
+    "salt": 2524,
+    "score": 30,
+    "source": "Store",
+    "ta": 46,
+    "tc": 0.25,
+    "time": "12:16"
+  }
+]
