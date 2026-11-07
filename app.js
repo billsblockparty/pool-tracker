@@ -384,32 +384,63 @@
     tt.appendChild(pr); var base = pr.getBoundingClientRect().top - tt.getBoundingClientRect().top; tt.removeChild(pr);
     return base - cap / 2;
   }
-  function layoutTiles() {
-    var wide = window.innerWidth >= 600, titleMid = null;
-    document.querySelectorAll('.sth').forEach(function (h) {
-      var tp = h.querySelector('.tp'); if (!tp) return;
-      if (!tp.dataset.done) {
-        tp.querySelectorAll('.tpl').forEach(function (l) { l.style.transform = 'translateY(' + capOffset(getComputedStyle(l)).toFixed(2) + 'px)'; });
-        tp.querySelectorAll('.tile').forEach(function (tl) {
-          var tin = tl.firstChild, parts = tin.querySelectorAll('.tv, .tu'), first = parts[0], last = parts[parts.length - 1];
-          // bearings of the first and last glyph alone (canvas ignores tabular-nums, which widens "." and "–")
-          var lb = ink(getComputedStyle(first), first.textContent.charAt(0)).l, rb = ink(getComputedStyle(last), last.textContent.slice(-1)).r;
-          tl.style.paddingLeft = (10 - lb).toFixed(2) + 'px'; tl.style.paddingRight = (10 - rb).toFixed(2) + 'px';
-          tin.style.transform = 'translateY(' + capOffset(getComputedStyle(tin.querySelector('.tv:not(.tmk)'))).toFixed(2) + 'px)';
-        });
-        tp.dataset.done = '1';
-      }
-      h.classList.remove('inl'); tp.classList.remove('two');
-      var cw = h.clientWidth; if (!cw) return; // closed History plan: laid out when opened
-      var kids = tp.children, pw = kids[kids.length - 1].getBoundingClientRect().right - kids[0].getBoundingClientRect().left;
-      if (pw > cw) { tp.classList.add('two'); return; } // pair wider than the content: TARGET on a second row
-      if (!wide) return;
-      var tt = h.querySelector('.pt2'), rg = document.createRange(); rg.selectNodeContents(tt);
-      if (rg.getBoundingClientRect().width + 16 + pw > cw) return; // collision: stay stacked
-      if (titleMid === null) titleMid = capMid(tt);
-      h.style.setProperty('--tp-y', (titleMid - 14).toFixed(2) + 'px');
-      h.classList.add('inl');
+  // Layout is decided per panel (the plan panel, or one History row's plan), never per step:
+  // two rows (CURRENT row, TARGET row) below 600px or when any step's title + pair would collide; otherwise all pairs on
+  // the title line, right-aligned. Two rows: every tile in the panel takes the widest tile's natural width. Title line:
+  // CURRENT tiles share one width and TARGET tiles share one width. Extra width is split evenly, so text stays glyph-centred.
+  function prepTiles(tp) {
+    if (tp.dataset.done) return;
+    tp.querySelectorAll('.tpl').forEach(function (l) { l.style.transform = 'translateY(' + capOffset(getComputedStyle(l)).toFixed(2) + 'px)'; });
+    tp.querySelectorAll('.tile').forEach(function (tl) {
+      var tin = tl.firstChild, parts = tin.querySelectorAll('.tv, .tu'), first = parts[0], last = parts[parts.length - 1];
+      // bearings of the first and last glyph alone (canvas ignores tabular-nums, which widens "." and "–")
+      tl.dataset.pl = 10 - ink(getComputedStyle(first), first.textContent.charAt(0)).l;
+      tl.dataset.pr = 10 - ink(getComputedStyle(last), last.textContent.slice(-1)).r;
+      tin.style.transform = 'translateY(' + capOffset(getComputedStyle(tin.querySelector('.tv:not(.tmk)'))).toFixed(2) + 'px)';
     });
+    tp.dataset.done = '1';
+  }
+  function sizeTile(tl, w, nat) { // w = shared width; nat = this tile's natural width
+    var x = (w - nat) / 2;
+    tl.style.paddingLeft = (+tl.dataset.pl + x).toFixed(2) + 'px'; tl.style.paddingRight = (+tl.dataset.pr + x).toFixed(2) + 'px';
+  }
+  function layoutPanel(host, wide) {
+    var heads = Array.prototype.slice.call(host.querySelectorAll('.sth')).filter(function (h) { return h.querySelector('.tp'); });
+    if (!heads.length || !heads[0].clientWidth) return; // closed History plan: laid out when opened
+    var tiles = [];
+    heads.forEach(function (h) {
+      var tp = h.querySelector('.tp'); prepTiles(tp);
+      h.classList.remove('inl'); tp.classList.remove('two');
+      tp.querySelectorAll('.tile').forEach(function (tl, i) {
+        tl.style.paddingLeft = tl.dataset.pl + 'px'; tl.style.paddingRight = tl.dataset.pr + 'px';
+        tiles.push({ el: tl, cur: i === 0, h: h });
+      });
+    });
+    tiles.forEach(function (t) { t.nat = t.el.getBoundingClientRect().width; });
+    var max = function (f) { return Math.max.apply(null, tiles.filter(f).map(function (t) { return t.nat; })); };
+    var inl = wide;
+    if (wide) { // try the title line with per-column shared widths; every step must fit
+      var wc = max(function (t) { return t.cur; }), wt = max(function (t) { return !t.cur; });
+      tiles.forEach(function (t) { sizeTile(t.el, t.cur ? wc : wt, t.nat); });
+      inl = heads.every(function (h) {
+        var kids = h.querySelector('.tp').children, pw = kids[kids.length - 1].getBoundingClientRect().right - kids[0].getBoundingClientRect().left;
+        var rg = document.createRange(); rg.selectNodeContents(h.querySelector('.pt2'));
+        return rg.getBoundingClientRect().width + 16 + pw <= h.clientWidth;
+      });
+    }
+    if (inl) {
+      var y = (capMid(heads[0].querySelector('.pt2')) - 14).toFixed(2) + 'px';
+      heads.forEach(function (h) { h.style.setProperty('--tp-y', y); h.classList.add('inl'); });
+    } else {
+      var w = max(function () { return true; });
+      tiles.forEach(function (t) { sizeTile(t.el, w, t.nat); });
+      heads.forEach(function (h) { h.querySelector('.tp').classList.add('two'); });
+    }
+  }
+  function layoutTiles() {
+    var wide = window.innerWidth >= 600;
+    var p = $('plan'); if (p) layoutPanel(p, wide);
+    document.querySelectorAll('#history details').forEach(function (d) { layoutPanel(d, wide); });
   }
   // Centre band labels on the band's middle by their visible glyphs (cap height), not the text box.
   var capCache = {};
