@@ -31,7 +31,7 @@ Single source of truth for the dashboard's look. Update this file with every UI 
 | --c-bad | #ff7a70 | well out (!!) |
 | --c-line | #e6eef7 | chart line |
 | --c-band | #5f6c79 | chart ideal-range band |
-| --c-dose | #e0b8ff | amounts and durations in treatment plans (anything marked `**…**`), weight 600; nothing else (added 2026-11-06) |
+| --c-dose | #5ee0f0 | "pool aqua": amounts and durations in treatment plans (anything marked `**…**`), weight 600; nothing else (added 2026-11-06; was #e0b8ff) |
 | --c-accent | #8fb8ff | links, "Recommendations and notes" toggles, focus rings |
 
 Radius: panels 6px; tooltip 4px; stat grid inner 4px. Borders: panels 2px frame; rows 1px divider. Shadow: `3px 3px 0 var(--c-frame)` (`--shadow`) on panels and tooltip; tiles use the smaller `2px 2px 0 var(--c-frame)` (written inline, same frame colour, no new token). Spacing: 4 / 8 / 12 / 16 / 24. Type: 11 / 13 / 15 / 22px, system UI stack, tabular figures for numbers.
@@ -39,7 +39,7 @@ Radius: panels 6px; tooltip 4px; stat grid inner 4px. Borders: panels 2px frame;
 ## Measured contrast (WCAG)
 - Text #f2f4f6: 15.5 on panel, 14.2 on alt row. Dim #a9b2bc: 8.0 panel, 7.3 alt.
 - Status text: ok 9.1 / 8.3, warn 9.2 / 8.4, bad 6.7 / 6.2 (panel / alt).
-- Band vs panel 3.19. Line vs panel 14.6, line vs band 4.59. Accent vs panel 8.5. Dose #e0b8ff: 10.97 on page, 10.16 on panel, 9.28 on alt row; vs accent only 1.19 (told apart by hue and role). Range values: --c-text 15.52 on panel, 14.17 on alt row; units --c-text-dim 7.97 / 7.28.
+- Band vs panel 3.19. Line vs panel 14.6, line vs band 4.59. Accent vs panel 8.5. Dose #5ee0f0: 11.78 on page, 10.92 on panel, 9.97 on alt row. Nearest other tokens (ΔE76): text-dim 34.0, line 34.5, text 37.6, accent 41.9 (contrast 1.28, told apart by hue and role), ok 43.7 (1.20; ok is green and only ever a status mark, dose only inside plan text). Range values: --c-text 15.52 on panel, 14.17 on alt row; units --c-text-dim 7.97 / 7.28.
 - Known shortfall: status-coloured points on the band are 2.3–2.9:1 against it. Every point gets a 2px frame-colour outline for separation.
 - Panel border (frame) vs page 1.08:1. Decorative, because the user's surface order requires the frame to be darkest.
 
@@ -120,3 +120,4 @@ Radius: panels 6px; tooltip 4px; stat grid inner 4px. Borders: panels 2px frame;
 - 2026-11-06: tile pair layout decided per panel (two rows below 600px or on any collision, one shared tile width; title line with shared CURRENT / TARGET widths); per-step fallback removed.
 - 2026-11-06: smaller tiles (24px, value 14px, unit 11px, 8px visible side gaps, 2px hard shadow, label gap 8px); ranges spaced "lo – hi" with no-break spaces everywhere (one helper, data unchanged); step bands 34px with 14px labels (letter-spacing 0.14em), How-to-fix right label 13px; cap centring reads the laid-out baseline.
 - 2026-11-06: units moved out of the CURRENT / TARGET tiles into a slot to the right (13px 500 dim, 6px visible gap, value baseline, one slot width per panel); tiles narrower (shared widths 101.5 / 58.9px).
+- 2026-11-06: --c-dose #e0b8ff -> #5ee0f0 ("pool aqua"); 11.78 on page, 10.92 on panel. No other change.
