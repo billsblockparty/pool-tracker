@@ -90,6 +90,7 @@
     renderCharts();
     renderHistory();
     centreBands();
+    layoutTiles();
     var n = $('notice');
     if (!state.loaded) return;
     if (!tests.length) { n.hidden = false; n.textContent = 'No tests recorded yet.'; } else n.hidden = true;
@@ -336,27 +337,79 @@
     }
     return b;
   }
-  function markReading(t, k) {
-    var m = MBY[k], v = C.value(t, k);
-    if (v === null) return el('span', { class: 'sbr pr' }, [el('span', { class: 'rd dim', text: '—' })]);
-    var s = C.status(t, k, state.ranges);
-    var e = el('span', { class: 'sbr pr' }, [el('span', { class: 'mk2 st-' + s.level, 'aria-hidden': 'true', text: ICON[s.level] })]);
-    var rd = el('span', { class: 'rd', text: C.show(t, m) });
-    if (m.unit) rd.appendChild(el('span', { class: 'u', text: m.unit }));
-    e.appendChild(rd);
-    return e;
+  // Step title tile pair: CURRENT (the step's reading, status fill) and TARGET (the ideal range, band fill). Not interactive.
+  function tile(cls, mark, value, unit) {
+    var tin = el('span', { class: 'tin' });
+    if (mark) { tin.appendChild(el('span', { class: 'tv tmk', 'aria-hidden': 'true', text: mark })); tin.appendChild(document.createTextNode(' ')); }
+    tin.appendChild(el('span', { class: 'tv', text: value }));
+    if (unit) tin.appendChild(el('span', { class: 'tu', text: unit }));
+    return el('span', { class: 'tile ' + cls }, [tin]);
   }
-  // Step header band: "STEP N" left, 2px rule across, value right (mirrors the dynasty tracker's bye line).
+  function tilePair(t, k) {
+    var m = MBY[k], v = C.value(t, k), r = state.ranges;
+    if (!m || !r[k]) return null;
+    var s = v === null ? { level: 'na' } : C.status(t, k, r);
+    var cur = v === null ? tile('tile-t', null, '—', null) : tile('tile-' + s.level, ICON[s.level], C.show(t, m), m.unit);
+    var tgt = k === 'cc' ? '≤ ' + numStr(r.cc.hi) : rangeText({ k: k }); // range text without unit; unit in its own span
+    return el('div', { class: 'tp' }, [el('span', { class: 'tpl', text: 'Current' }), cur,
+      el('span', { class: 'tpl', text: 'Target' }), tile('tile-t', null, tgt, m.unit)]);
+  }
+  // Step header band: "STEP N" left, 2px rule across, optional value right (mirrors the dynasty tracker's bye line).
   function band(leftText, right) {
     var b = el('div', { class: 'sb' }, [el('span', { class: 'sbl', text: leftText }), el('span', { class: 'sbrule', 'aria-hidden': 'true' })]);
-    b.appendChild(right);
+    if (right) b.appendChild(right);
     return b;
   }
   function stepRow(step, t) {
-    return el('div', { class: 'ps' }, [
-      band('Step ' + step.n, markReading(t, step.key)),
-      el('div', { class: 'sc' }, [el('div', { class: 'pt2', text: step.title }), stepBody(step)])
-    ]);
+    var head = el('div', { class: 'sth' }, [el('div', { class: 'pt2', text: step.title }), tilePair(t, step.key)]);
+    return el('div', { class: 'ps' }, [band('Step ' + step.n), el('div', { class: 'sc' }, [head, stepBody(step)])]);
+  }
+  // Tile pair layout: glyph-centred tile text, then stacked (<600px or collision) or on the title's line (600px+).
+  var inkCache = {};
+  function ink(cs, s) { // left / right side bearings of the visible glyphs of s
+    var key = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily + '|' + s;
+    if (!inkCache[key]) {
+      // measured at 10x size: some engines round ink bounds to whole pixels
+      var c = document.createElement('canvas').getContext('2d'); c.font = cs.fontWeight + ' ' + (parseFloat(cs.fontSize) * 10) + 'px ' + cs.fontFamily;
+      var mt = c.measureText(s);
+      inkCache[key] = { l: -mt.actualBoundingBoxLeft / 10, r: (mt.width - mt.actualBoundingBoxRight) / 10 };
+    }
+    return inkCache[key];
+  }
+  function capMid(tt) { // y of the title's cap-height centre below its top: laid-out baseline minus half the cap height
+    var cs = getComputedStyle(tt), c = document.createElement('canvas').getContext('2d');
+    c.font = cs.fontWeight + ' ' + (parseFloat(cs.fontSize) * 10) + 'px ' + cs.fontFamily; // at 10x: ink bounds are rounded
+    var cap = c.measureText('STEP0123456789').actualBoundingBoxAscent / 10;
+    var pr = el('span', { style: 'display:inline-block;width:0;height:0;vertical-align:baseline' });
+    tt.appendChild(pr); var base = pr.getBoundingClientRect().top - tt.getBoundingClientRect().top; tt.removeChild(pr);
+    return base - cap / 2;
+  }
+  function layoutTiles() {
+    var wide = window.innerWidth >= 600, titleMid = null;
+    document.querySelectorAll('.sth').forEach(function (h) {
+      var tp = h.querySelector('.tp'); if (!tp) return;
+      if (!tp.dataset.done) {
+        tp.querySelectorAll('.tpl').forEach(function (l) { l.style.transform = 'translateY(' + capOffset(getComputedStyle(l)).toFixed(2) + 'px)'; });
+        tp.querySelectorAll('.tile').forEach(function (tl) {
+          var tin = tl.firstChild, parts = tin.querySelectorAll('.tv, .tu'), first = parts[0], last = parts[parts.length - 1];
+          // bearings of the first and last glyph alone (canvas ignores tabular-nums, which widens "." and "–")
+          var lb = ink(getComputedStyle(first), first.textContent.charAt(0)).l, rb = ink(getComputedStyle(last), last.textContent.slice(-1)).r;
+          tl.style.paddingLeft = (10 - lb).toFixed(2) + 'px'; tl.style.paddingRight = (10 - rb).toFixed(2) + 'px';
+          tin.style.transform = 'translateY(' + capOffset(getComputedStyle(tin.querySelector('.tv:not(.tmk)'))).toFixed(2) + 'px)';
+        });
+        tp.dataset.done = '1';
+      }
+      h.classList.remove('inl'); tp.classList.remove('two');
+      var cw = h.clientWidth; if (!cw) return; // closed History plan: laid out when opened
+      var kids = tp.children, pw = kids[kids.length - 1].getBoundingClientRect().right - kids[0].getBoundingClientRect().left;
+      if (pw > cw) { tp.classList.add('two'); return; } // pair wider than the content: TARGET on a second row
+      if (!wide) return;
+      var tt = h.querySelector('.pt2'), rg = document.createRange(); rg.selectNodeContents(tt);
+      if (rg.getBoundingClientRect().width + 16 + pw > cw) return; // collision: stay stacked
+      if (titleMid === null) titleMid = capMid(tt);
+      h.style.setProperty('--tp-y', (titleMid - 14).toFixed(2) + 'px');
+      h.classList.add('inl');
+    });
   }
   // Centre band labels on the band's middle by their visible glyphs (cap height), not the text box.
   var capCache = {};
@@ -384,7 +437,7 @@
       return row;
     });
   }
-  // History omits the step's reading: the history row already shows every reading and its status above the plan.
+  // History plans use the same step component (tile pair with each step's reading and target).
   function planNodes(t) {
     var out = (t.plan.steps || []).map(function (s) { return stepRow(s, t); });
     if (t.plan.weekly && t.plan.weekly.length) out = out.concat([el('h3', { class: 'sec-h', text: 'Every week' })], weeklyRows(t.plan.weekly));
@@ -557,6 +610,7 @@
       row.appendChild(g);
       if ((t.plan && (t.plan.steps || []).length) || t.notes) {
         var det = el('details', null, [el('summary', { text: 'Treatment plan' })]);
+        det.addEventListener('toggle', function () { if (det.open) layoutTiles(); });
         if (t.plan) planNodes(t).forEach(function (n) { det.appendChild(n); });
         if (t.notes) det.appendChild(el('p', { class: 'rec dim', text: 'Notes: ' + t.notes }));
         row.appendChild(det);
@@ -582,6 +636,7 @@
   var lastW = window.innerWidth, rt = null;
   window.addEventListener('resize', function () {
     if (window.innerWidth === lastW) return; lastW = window.innerWidth;
+    layoutTiles();
     clearTimeout(rt); rt = setTimeout(renderCharts, 120);
   });
 

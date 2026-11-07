@@ -135,13 +135,33 @@ button.nr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: -2
 .sb { display: flex; align-items: center; height: 28px; padding: 0 var(--s3); background: var(--c-divider); }
 .sbl { font-size: var(--f-xs); font-weight: 600; color: var(--c-text); text-transform: uppercase; letter-spacing: 0.16em; line-height: 28px; white-space: nowrap; margin-right: calc(14px - 0.16em); }
 .sbrule { flex: 1 1 auto; min-width: 40px; height: 2px; background: var(--c-text-dim); margin-right: 14px; }
+.sbrule:last-child { margin-right: 0; } /* plan / History: no right label, rule ends at the band's 12px padding */
 .sbr { line-height: 28px; white-space: nowrap; }
 .sbm { font-size: var(--f-xs); color: var(--c-text-dim); }
-.pr .mk2 { font-size: var(--f-sm); font-weight: 600; margin-right: 4px; }
-.pr .rd { font-size: var(--f-sm); font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
 .ps .sc { padding: var(--s3) var(--s3) 16px; }
 .ps .pt2 { font-size: 17px; font-weight: 600; color: var(--c-text); }
 .ps .pb { margin-top: 8px; }
+/* Step title + Current / Target tile pair. Stacked below 600px (or when the title and tiles would collide);
+   on the title's line, right-aligned, at 600px+. Tiles are markers, not controls. */
+.sth { display: flex; flex-direction: column; align-items: flex-start; }
+.sth .pt2 { min-width: 0; }
+.tp { display: flex; align-items: flex-start; margin-top: 10px; white-space: nowrap; flex: 0 0 auto; }
+.sth + .pb { margin-top: 12px; }
+.sth.inl { flex-direction: row; justify-content: space-between; align-items: flex-start; column-gap: var(--s4); }
+.sth.inl .tp { margin-top: var(--tp-y, 0px); }
+.tpl { font-size: var(--f-xs); font-weight: 600; color: var(--c-text-dim); text-transform: uppercase; letter-spacing: 0.12em;
+  line-height: 28px; margin-right: calc(6px - 0.12em); }
+.tile + .tpl { margin-left: var(--s4); }
+/* Pair wider than the content (narrow screens, long values): two rows, labels in one column so the tiles share a left edge */
+.tp.two { display: grid; grid-template-columns: auto auto; justify-content: start; justify-items: start; row-gap: var(--s2); }
+.tp.two .tile + .tpl { margin-left: 0; }
+.tile { display: block; height: 28px; padding: 0 10px; border-radius: var(--r-ctl); box-shadow: var(--shadow);
+  font-size: var(--f-md); line-height: 28px; color: var(--c-frame); cursor: default; user-select: none; }
+.tile-ok { background: var(--c-ok); } .tile-warn { background: var(--c-warn); } .tile-bad { background: var(--c-bad); }
+.tile-t { background: var(--c-band); color: var(--c-text); }
+.tin { display: block; }
+.tv { font-weight: 600; font-variant-numeric: tabular-nums; }
+.tu { font-size: 12px; font-weight: 400; line-height: 1; margin-left: 3px; }
 .pb p { margin: 0; }
 .ck { list-style: none; margin: 0; padding: 0; }
 .cki { display: grid; grid-template-columns: 24px 1fr; }
@@ -164,6 +184,7 @@ button.nr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: -2
 .wk-a { font-size: var(--f-md); font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
 .wk-n { font-size: var(--f-md); color: var(--c-text); padding: 2px var(--s3) 0; }
 .pl2 { display: grid; grid-template-columns: 1fr; }
+.pl2 > .col-a, .pl2 > .col-b { min-width: 0; } /* columns never grow to an unwrapped tile pair's width */
 #plan .sec-h { border-top: var(--b-row); }
 @media (min-width: 900px) {
   .pl2 { grid-template-columns: 1.4fr 1fr; }
@@ -290,7 +311,7 @@ footer a { color: var(--c-accent); }
 
   <footer>Design notes: <a href="DESIGN.md">DESIGN.md</a></footer>
 </div>
-<script src="calc.js?v=bf96578b"></script>
-<script src="app.js?v=bf96578b"></script>
+<script src="calc.js?v=872db025"></script>
+<script src="app.js?v=872db025"></script>
 </body>
 </html>
