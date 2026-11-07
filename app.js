@@ -220,7 +220,7 @@
     steps.forEach(function (s) { if (s.key === k) step = s; });
     if (step) {
       area.appendChild(band('Step ' + step.n + ' of ' + steps.length, el('span', { class: 'sbr sbm', text: 'from ' + dShort(t.date) + ' test' })));
-      var body = el('div', { class: 'fxc' }, [stepBody(step)]);
+      var body = el('div', { class: 'fxc' }, [stepBody(step, claudeStep(t, step))]);
       var link = el('button', { type: 'button', class: 'fx-link', text: 'See full plan' });
       link.addEventListener('click', function () {
         var hd = $('h-rec'); $('rec-panel').scrollIntoView({ block: 'start' }); hd.focus({ preventScroll: true });
@@ -308,8 +308,20 @@
     });
     return node;
   }
-  // Checklist step body: numbered items (do / choose / wait), then notes (safety / tip).
-  function stepBody(step) {
+  // Claude's notes (plan.claudeNotes): Claude's own guidance, always labelled, kept apart from the store's instructions
+  // and never changing its amounts. overall = notes on the whole test (block above STEP 1); steps["n"] = notes on step n.
+  function claudeNotes(t) { return (t && t.plan && t.plan.claudeNotes) || {}; }
+  function claudeStep(t, step) { var st = claudeNotes(t).steps || {}; return st[String(step.n)] || []; }
+  function claudeOverall(t) {
+    var ov = claudeNotes(t).overall || [];
+    if (!ov.length) return null;
+    var b = el('div', { class: 'cn' }, [el('h3', { class: 'cnh', text: 'Claude\u2019s notes on this test' })]);
+    ov.forEach(function (x) { b.appendChild(richInto(el('p', { class: 'cnp' }), x)); });
+    b.appendChild(el('p', { class: 'cnf', text: 'General guidance from Claude, not the store\u2019s instructions.' }));
+    return b;
+  }
+  // Checklist step body: numbered items (do / choose / wait), then notes (safety / tip), then Claude's notes on the step.
+  function stepBody(step, extra) {
     var b = el('div', { class: 'pb' }), list = el('ol', { class: 'ck' });
     (step.items || []).forEach(function (it, i) {
       var body = el('div', { class: 'ckb' });
@@ -329,12 +341,13 @@
       list.appendChild(el('li', { class: 'cki' }, [el('span', { class: 'ckn', 'aria-hidden': 'true', text: String(i + 1) }), body]));
     });
     b.appendChild(list);
-    if ((step.notes || []).length) {
+    var notes = (step.notes || []).concat((extra || []).map(function (x) { return { kind: 'claude', text: x }; }));
+    if (notes.length) {
       // Each run of same-kind notes: the label on its own line, then each note full width beneath it.
-      var nb = el('div', { class: 'nts' }), grp = null, last = null;
-      step.notes.forEach(function (n) {
+      var nb = el('div', { class: 'nts' }), grp = null, last = null, LBL = { safety: 'Before swimming', tip: 'Good to know', claude: 'Claude\u2019s note' };
+      notes.forEach(function (n) {
         if (n.kind !== last) {
-          grp = el('div', { class: 'ntg' }, [el('p', { class: 'ntl', text: n.kind === 'safety' ? 'Before swimming' : 'Good to know' })]);
+          grp = el('div', { class: 'ntg' }, [el('p', { class: 'ntl', text: LBL[n.kind] || 'Good to know' })]);
           nb.appendChild(grp);
         }
         grp.appendChild(richInto(el('p', { class: 'nt' }), n.text));
@@ -370,7 +383,7 @@
   }
   function stepRow(step, t) {
     var head = el('div', { class: 'sth' }, [el('div', { class: 'pt2', text: step.title }), tilePair(t, step.key)]);
-    return el('div', { class: 'ps' }, [band('Step ' + step.n), el('div', { class: 'sc' }, [head, stepBody(step)])]);
+    return el('div', { class: 'ps' }, [band('Step ' + step.n), el('div', { class: 'sc' }, [head, stepBody(step, claudeStep(t, step))])]);
   }
   // Tile pair layout: glyph-centred tile text, then stacked (<600px or collision) or on the title's line (600px+).
   var inkCache = {};
@@ -501,12 +514,13 @@
   // History plans use the same step component (tile pair with each step's reading and target).
   function planNodes(t) {
     var out = (t.plan.steps || []).map(function (s) { return stepRow(s, t); });
+    var cn = claudeOverall(t); if (cn) out.unshift(cn);
     if (t.plan.weekly && t.plan.weekly.length) out = out.concat([el('h3', { class: 'sec-h', text: 'Every week' })], weeklyRows(t.plan.weekly));
     return out;
   }
   // Plan panel: steps left, "Every week" right at 900px+ (same 1.4fr / 1fr grid as Latest results).
   function planPanelNodes(t) {
-    var a = el('div', { class: 'col-a' }, (t.plan.steps || []).map(function (s) { return stepRow(s, t); }));
+    var a = el('div', { class: 'col-a' }, [claudeOverall(t)].concat((t.plan.steps || []).map(function (s) { return stepRow(s, t); })));
     var b = el('div', { class: 'col-b' });
     if (t.plan.weekly && t.plan.weekly.length) [el('h3', { class: 'sec-h', text: 'Every week' })].concat(weeklyRows(t.plan.weekly)).forEach(function (n) { b.appendChild(n); });
     return [el('div', { class: 'pl2' }, [a, b])];

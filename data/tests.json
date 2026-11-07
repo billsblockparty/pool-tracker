@@ -22,6 +22,10 @@
       {
         "at": "2026-11-07T01:05:00Z",
         "what": "plan rewritten as a checklist (items: do/choose/wait; notes: safety/tip); wording from the owner. No readings changed."
+      },
+      {
+        "at": "2026-11-07T12:00:00Z",
+        "what": "plan: claudeNotes added (Claude's own guidance: two overall notes, one note on step 3), shown separately from the store's instructions. Store plan and readings unchanged."
       }
     ],
     "fc": 0.25,
@@ -249,7 +253,18 @@
           "amount": "**3 fl oz**",
           "note": "Only with heavy use, animals or debris"
         }
-      ]
+      ],
+      "claudeNotes": {
+        "overall": [
+          "Stabiliser (CYA) read **5** on both tests. Without stabiliser, sunlight burns off chlorine within a few hours, which likely explains free chlorine falling from **2.33** to **0.25**. Step 5 matters more than its position suggests.",
+          "pH rose from **6.9** to **8.7** in five days. Salt-chlorine pools tend to push pH up, so check pH more often than weekly for a while."
+        ],
+        "steps": {
+          "3": [
+            "Acid lowers alkalinity as well as pH. Finish step 2 and retest before adding acid."
+          ]
+        }
+      }
     }
   },
   {
