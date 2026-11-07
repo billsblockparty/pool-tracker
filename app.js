@@ -322,11 +322,13 @@
     });
     b.appendChild(list);
     if ((step.notes || []).length) {
-      // Consecutive notes of the same kind share one label; later ones keep the label column empty so all texts share one left edge.
+      // Each run of same-kind notes: the label on its own line, then each note full width beneath it.
       var nb = el('div', { class: 'nts' }), grp = null, last = null;
       step.notes.forEach(function (n) {
-        if (n.kind !== last) { grp = el('div', { class: 'ntg' }); nb.appendChild(grp); }
-        grp.appendChild(el('span', { class: 'ntl', text: n.kind === last ? '' : (n.kind === 'safety' ? 'Before swimming:' : 'Good to know:') }));
+        if (n.kind !== last) {
+          grp = el('div', { class: 'ntg' }, [el('p', { class: 'ntl', text: n.kind === 'safety' ? 'Before swimming' : 'Good to know' })]);
+          nb.appendChild(grp);
+        }
         grp.appendChild(richInto(el('p', { class: 'nt' }), n.text));
         last = n.kind;
       });
