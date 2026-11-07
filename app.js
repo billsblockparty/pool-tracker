@@ -205,15 +205,42 @@
     g.appendChild(shape(info.s.level, X(info.f), 7, MINI));
     return g;
   }
+  function fixArea(t, k, id) {
+    var area = el('div', { class: 'fix', id: id, hidden: '' });
+    var steps = (t.plan && t.plan.steps) || [], step = null;
+    steps.forEach(function (s) { if (s.key === k) step = s; });
+    if (step) {
+      area.appendChild(el('p', { class: 'fx-h', text: 'Step ' + step.n + ' of ' + steps.length + ' · from ' + dShort(t.date) + ' test' }));
+      area.appendChild(stepBody(step));
+      var link = el('button', { type: 'button', class: 'fx-link', text: 'See full plan' });
+      link.addEventListener('click', function () {
+        var hd = $('h-rec'); $('rec-panel').scrollIntoView({ block: 'start' }); hd.focus({ preventScroll: true });
+      });
+      area.appendChild(link);
+    } else {
+      area.appendChild(el('p', { class: 'fx-msg', text: (k === 'fe' || k === 'cu') ? 'No store step for this. Metal treatments are left out on purpose.' : 'No store step for this in the latest plan.' }));
+    }
+    return area;
+  }
   function needRow(t, prev, m, s) {
-    var row = el('div', { class: 'nr' });
+    var id = 'fix-' + m.k;
+    var row = el('button', { type: 'button', class: 'nr', 'aria-expanded': 'false', 'aria-controls': id });
     row.appendChild(nameEl('nn', m.k));
     row.appendChild(readingEl('nv', t, m));
     row.appendChild(el('span', { class: 'na st-' + s.level }, [el('span', { class: 'mk', 'aria-hidden': 'true', text: ICON[s.level] }), actionText(t, m, s)]));
     row.appendChild(miniGauge(t, m));
+    var hf = el('span', { class: 'hf', text: 'How to fix ▾' + VS });
+    row.appendChild(hf);
     var d = C.delta(t, prev, m.k);
-    if (d !== null) row.appendChild(el('span', { class: 'nc', text: (Math.abs(d) < 1e-9 ? '= 0' : deltaText(d, m)) + ' since ' + dShort(prev.date) }));
-    return row;
+    row.appendChild(el('span', { class: 'nc', text: d === null ? '' : (Math.abs(d) < 1e-9 ? '= 0' : deltaText(d, m)) + ' since ' + dShort(prev.date) }));
+    var area = fixArea(t, m.k, id);
+    row.addEventListener('click', function () {
+      var open = row.getAttribute('aria-expanded') !== 'true';
+      row.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) area.removeAttribute('hidden'); else area.setAttribute('hidden', '');
+      hf.textContent = open ? '▴' + VS + ' Hide steps' : 'How to fix ▾' + VS;
+    });
+    return [row, area];
   }
   function lineRow(left, right) { return el('div', { class: 'ir' }, [left, right]); }
   function section(title, rows) {
@@ -240,7 +267,7 @@
     });
     var need = bad.concat(warn);
     var colA = el('div', { class: 'col-a' }), colB = el('div', { class: 'col-b' });
-    colA.appendChild(need.length ? section('Needs attention · ' + need.length, need.map(function (x) { return needRow(latest, prev, x[0], x[1]); }))
+    colA.appendChild(need.length ? section('Needs attention · ' + need.length, [].concat.apply([], need.map(function (x) { return needRow(latest, prev, x[0], x[1]); })))
       : el('div', { class: 'sec' }, [el('div', { class: 'allok', text: 'Everything in range ✓' + VS })]));
     if (ok.length) colB.appendChild(section('In range · ' + ok.length, ok.map(function (x) {
       var rd = readingEl('iv', latest, x[0]); rd.appendChild(el('span', { class: 'okm', text: ' ✓' + VS }));
@@ -254,12 +281,61 @@
     drawBars();
   }
 
+  // ---------- Treatment plan ----------
+  // "**amount**" in plan text renders as a bold, unbreakable amount; everything else is plain text.
+  function richText(cls, txt, prefix) {
+    var p = el('p', { class: cls });
+    if (prefix) p.appendChild(document.createTextNode(prefix));
+    String(txt).split('**').forEach(function (part, i) {
+      if (!part) return;
+      p.appendChild(i % 2 ? el('span', { class: 'amt', text: part }) : document.createTextNode(part));
+    });
+    return p;
+  }
+  function stepBody(step) {
+    var b = el('div', { class: 'pb' });
+    (step.actions || []).forEach(function (x) { b.appendChild(richText('pa', x)); });
+    (step.waits || []).forEach(function (x) { b.appendChild(richText('pw', x)); });
+    (step.notes || []).forEach(function (x) { b.appendChild(richText('pnote', x, 'Note: ')); });
+    return b;
+  }
+  function markReading(t, k) {
+    var m = MBY[k], v = C.value(t, k);
+    if (v === null) return el('span', { class: 'pr' }, [el('span', { class: 'rd dim', text: '—' })]);
+    var s = C.status(t, k, state.ranges);
+    var e = el('span', { class: 'pr' }, [el('span', { class: 'mk2 st-' + s.level, 'aria-hidden': 'true', text: ICON[s.level] })]);
+    var rd = el('span', { class: 'rd', text: C.show(t, m) });
+    if (m.unit) rd.appendChild(el('span', { class: 'u', text: m.unit }));
+    e.appendChild(rd);
+    return e;
+  }
+  function stepRow(step, t, noReading) {
+    var kids = [el('span', { class: 'pn', text: String(step.n) }), el('span', { class: 'pt2', text: step.title })];
+    if (!noReading) kids.push(markReading(t, step.key));
+    return el('div', { class: 'ps' + (noReading ? ' ps-nr' : '') }, kids.concat([stepBody(step)]));
+  }
+  function weeklyRows(list) {
+    return (list || []).map(function (w) {
+      var a = el('span', { class: 'wk-a' });
+      String(w.amount).split('**').forEach(function (part, i) { if (part) a.appendChild(i % 2 ? el('span', { class: 'amt', text: part }) : document.createTextNode(part)); });
+      var row = el('div', { class: 'wk' }, [el('div', { class: 'wk-r' }, [el('span', { class: 'wk-i', text: w.item }), a])]);
+      if (w.note) row.appendChild(el('div', { class: 'wk-n', text: w.note }));
+      return row;
+    });
+  }
+  // History omits the step's reading: the history row already shows every reading and its status above the plan.
+  function planNodes(t, noReading) {
+    var out = (t.plan.steps || []).map(function (s) { return stepRow(s, t, noReading); });
+    if (t.plan.weekly && t.plan.weekly.length) out = out.concat([el('h3', { class: 'sec-h', text: 'Every week' })], weeklyRows(t.plan.weekly));
+    return out;
+  }
   function renderRec(latest) {
-    var p = $('rec-panel');
-    if (!latest || !latest.recommendations) { p.hidden = true; return; }
+    var p = $('rec-panel'), host = $('plan');
+    clear(host);
+    if (!latest || !latest.plan || !(latest.plan.steps || []).length) { p.hidden = true; return; }
     p.hidden = false;
-    $('rec').textContent = latest.recommendations;
-    $('rec-when').textContent = dLong(latest.date);
+    $('rec-when').textContent = 'from ' + dShort(latest.date) + ' test';
+    planNodes(latest).forEach(function (n) { host.appendChild(n); });
   }
 
   // ---------- charts ----------
@@ -411,9 +487,9 @@
         ]));
       });
       row.appendChild(g);
-      if (t.recommendations || t.notes) {
-        var det = el('details', null, [el('summary', { text: 'Recommendations and notes' })]);
-        if (t.recommendations) det.appendChild(el('p', { class: 'rec', text: t.recommendations }));
+      if ((t.plan && (t.plan.steps || []).length) || t.notes) {
+        var det = el('details', null, [el('summary', { text: 'Treatment plan' })]);
+        if (t.plan) planNodes(t, true).forEach(function (n) { det.appendChild(n); });
         if (t.notes) det.appendChild(el('p', { class: 'rec dim', text: 'Notes: ' + t.notes }));
         row.appendChild(det);
       }

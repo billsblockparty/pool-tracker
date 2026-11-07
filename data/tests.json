@@ -9,7 +9,11 @@
     "edits": [
       {
         "at": "2026-11-06T20:31:00Z",
-        "what": "De-identified: source Leslie's -> Store; store brand names removed from recommendations. No readings changed."
+        "what": "De-identified: source label made generic (Store); store brand names removed from recommendations. No readings changed."
+      },
+      {
+        "at": "2026-11-07T00:30:00Z",
+        "what": "recommendations text replaced by structured plan (metals step omitted by rule). No readings changed."
       }
     ],
     "fc": 0.25,
@@ -17,13 +21,125 @@
     "nextTest": "2026-11-13",
     "ph": 8.7,
     "po4": 0,
-    "recommendations": "Weekly maintenance routine (report page 1; pages 2–3 not provided):\n1. Sanitize: adjust the salt chlorine generator to keep 1–4 ppm free chlorine.\n2. Shock: add 10 oz of store-brand shock weekly.\n3. Prevent: add 5 fl oz of store-brand weekly maintenance treatment every week.\nPro tip: for heavy use, swimming animals or significant debris, add 3 fl oz of store-brand algaecide weekly.\nProblems reported: N/A.",
     "salt": 2524,
     "score": 30,
     "source": "Store",
     "ta": 46,
     "tc": 0.25,
-    "time": "12:16"
+    "time": "12:16",
+    "plan": {
+      "steps": [
+        {
+          "n": 1,
+          "key": "ch",
+          "title": "Lower calcium hardness",
+          "actions": [
+            "Partially drain and refill with fresh water."
+          ],
+          "waits": [],
+          "notes": [
+            "If you drain, refill promptly and skip the remaining steps unless there is algae, which must be treated first.",
+            "Don't drain if the water table is high."
+          ]
+        },
+        {
+          "n": 2,
+          "key": "ta",
+          "title": "Raise alkalinity",
+          "actions": [
+            "Add store-brand alkalinity increaser, **6 lb 13 oz** in total; never more than **9 lb** at once. Broadcast with the pump running."
+          ],
+          "waits": [
+            "Wait 4 h between doses; retest after half the total.",
+            "Wait 4 h after the last dose."
+          ],
+          "notes": [
+            "Not on the same day as calcium increaser."
+          ]
+        },
+        {
+          "n": 3,
+          "key": "ph",
+          "title": "Lower pH",
+          "actions": [
+            "Add muriatic acid **46 fl oz** in total (never more than **15 fl oz** at once), OR store-brand dry acid **3 lb 9 oz** (never more than **1 lb 2 oz** at once).",
+            "Add the acid to a clean bucket holding at least 1 gal of pool water, then pour it in with the pump running."
+          ],
+          "waits": [
+            "Wait 4 h between doses; retest after half the total.",
+            "Wait 4 h after the last dose."
+          ],
+          "notes": [
+            "Use one type of acid only, never both. Always add acid to water."
+          ]
+        },
+        {
+          "n": 4,
+          "key": "fc",
+          "title": "Raise free chlorine",
+          "actions": [
+            "Add one of: store-brand calcium hypochlorite shock (73%) **5 oz**, OR store-brand dichlor granules **6 oz**, OR liquid chlorine **32 fl oz**, with the pump running."
+          ],
+          "waits": [
+            "Wait 4 h."
+          ],
+          "notes": [
+            "Don't swim until FC is 2–4 ppm. Consider raising the salt generator output."
+          ]
+        },
+        {
+          "n": 5,
+          "key": "cya",
+          "title": "Raise stabiliser (CYA)",
+          "actions": [
+            "Clean the filter first.",
+            "Add store-brand liquid stabiliser **1 gal 34 fl oz** into the skimmer with the pump running, OR store-brand granular stabiliser **3 lb 6 oz** in two halves: mix each half in a bucket of pool water and pour into the skimmer."
+          ],
+          "waits": [
+            "Wait 2 h between halves; wait 2 h after."
+          ],
+          "notes": [
+            "With the granular kind, don't clean the filter for 72 h. Retest after 24 h (liquid) or 72 h (granular)."
+          ]
+        },
+        {
+          "n": 6,
+          "key": "salt",
+          "title": "Raise salt",
+          "actions": [
+            "Add pool salt **50 lb 10 oz** slowly around the pool edge with the pump running; brush the bottom."
+          ],
+          "waits": [
+            "Wait 24 h for it to dissolve and circulate."
+          ],
+          "notes": [
+            "Don't add salt if the water is below 60 °F."
+          ]
+        }
+      ],
+      "weekly": [
+        {
+          "item": "Salt generator",
+          "amount": "FC 1–4 ppm",
+          "note": "Set the generator to hold this"
+        },
+        {
+          "item": "Shock",
+          "amount": "**10 oz**",
+          "note": null
+        },
+        {
+          "item": "Weekly maintenance treatment",
+          "amount": "**5 fl oz**",
+          "note": null
+        },
+        {
+          "item": "Algaecide",
+          "amount": "**3 fl oz**",
+          "note": "only with heavy use, animals or debris"
+        }
+      ]
+    }
   },
   {
     "id": "t-20261101-x",
@@ -32,7 +148,12 @@
     "cu": 0.4,
     "cya": 5,
     "date": "2026-11-01",
-    "edits": [],
+    "edits": [
+      {
+        "at": "2026-11-07T00:30:00Z",
+        "what": "structured plan added. No readings changed."
+      }
+    ],
     "fc": 2.33,
     "fe": 0.1,
     "nextTest": "2026-11-08",
@@ -43,6 +164,89 @@
     "source": "Store",
     "ta": 35,
     "tc": 3.58,
-    "time": null
+    "time": null,
+    "plan": {
+      "steps": [
+        {
+          "n": 1,
+          "key": "ch",
+          "title": "Lower calcium hardness",
+          "actions": [
+            "Partially drain and refill with fresh water."
+          ],
+          "waits": [],
+          "notes": [
+            "If you drain, refill promptly and skip the remaining steps unless there is algae, which must be treated first.",
+            "Don't drain if the water table is high."
+          ]
+        },
+        {
+          "n": 2,
+          "key": "ta",
+          "title": "Raise alkalinity",
+          "actions": [
+            "Add store-brand alkalinity increaser, **8 lb 4 oz** in total; never more than **9 lb** at once. Broadcast with the pump running."
+          ],
+          "waits": [
+            "Wait 4 h between doses; retest after half the total.",
+            "Wait 4 h after the last dose."
+          ],
+          "notes": [
+            "Not on the same day as calcium increaser."
+          ]
+        },
+        {
+          "n": 3,
+          "key": "cc",
+          "title": "Lower combined chlorine",
+          "actions": [
+            "Add store-brand oxidising shock **15 oz** with the pump running."
+          ],
+          "waits": [
+            "Wait 15 min."
+          ],
+          "notes": [
+            "Don't swim until FC is 2–4 ppm. Retest after 24 h."
+          ]
+        },
+        {
+          "n": 4,
+          "key": "cya",
+          "title": "Raise stabiliser (CYA)",
+          "actions": [
+            "Clean the filter first.",
+            "Add store-brand liquid stabiliser **1 gal 34 fl oz** into the skimmer with the pump running, OR store-brand granular stabiliser **3 lb 6 oz** in two halves: mix each half in a bucket of pool water and pour into the skimmer."
+          ],
+          "waits": [
+            "Wait 2 h between halves; wait 2 h after."
+          ],
+          "notes": [
+            "With the granular kind, don't clean the filter for 72 h. Retest after 24 h (liquid) or 72 h (granular)."
+          ]
+        }
+      ],
+      "weekly": [
+        {
+          "item": "Salt generator",
+          "amount": "FC 1–4 ppm",
+          "note": "Set the generator to hold this"
+        },
+        {
+          "item": "Shock",
+          "amount": "**10 oz**",
+          "note": null
+        },
+        {
+          "item": "Weekly maintenance treatment",
+          "amount": "**5 fl oz**",
+          "note": null
+        },
+        {
+          "item": "Algaecide",
+          "amount": "**3 fl oz**",
+          "note": "only with heavy use, animals or debris"
+        }
+      ]
+    }
   }
 ]

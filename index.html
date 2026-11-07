@@ -97,7 +97,7 @@ th.num { text-align: right; }
 .sec + .sec .sec-h { border-top: var(--b-row); }
 @media (max-width: 899px) { .lv4 .col-b .sec:first-child .sec-h { border-top: var(--b-row); } }
 .nr { display: grid; grid-template-columns: 1fr auto; column-gap: var(--s3); row-gap: 2px; align-items: baseline; padding: 10px var(--s3); }
-.nr + .nr, .ir + .ir { border-top: var(--b-row); }
+.fix + .nr, .ir + .ir { border-top: var(--b-row); }
 .nn, .in { white-space: nowrap; color: var(--c-text); }
 .nn { font-size: var(--f-md); font-weight: 600; }
 .in { font-size: 14px; font-weight: 400; }
@@ -111,7 +111,44 @@ th.num { text-align: right; }
 svg.mg { display: block; width: 96px; height: 14px; margin-right: -6px; justify-self: end; align-self: center; overflow: visible; }
 .mg .track { fill: var(--c-divider); }
 .mg .band { fill: var(--c-band); }
-.nc { grid-column: 1 / -1; font-size: var(--f-xs); color: var(--c-text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.nc { font-size: var(--f-xs); color: var(--c-text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; justify-self: end; }
+button.nr { width: 100%; min-height: 44px; margin: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+button.nr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: -2px; }
+.hf { font-size: var(--f-sm); font-weight: 600; color: var(--c-accent); white-space: nowrap; }
+.fix { background: var(--c-page); padding: var(--s3); }
+.fix[hidden] { display: none; }
+.fix .fx-h { font-size: var(--f-sm); color: var(--c-text-dim); margin: 0 0 6px; }
+.fix .fx-msg { font-size: var(--f-md); color: var(--c-text-dim); margin: 0; }
+.fix .fx-link { display: inline-block; margin-top: 6px; padding: 0; border: 0; background: transparent; font: 600 var(--f-sm) var(--font); color: var(--c-accent); cursor: pointer; min-height: 24px; }
+.fix .fx-link:focus-visible, .fix + .nr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+
+/* Treatment plan: step component (plan panel, History, How to fix) */
+.ps { display: grid; grid-template-columns: 20px 1fr auto; column-gap: 0; padding: 10px var(--s3); }
+.ps + .ps { border-top: var(--b-row); }
+.ps .pn { font-size: var(--f-md); font-weight: 600; color: var(--c-text-dim); align-self: baseline; }
+.ps .pt2 { font-size: 17px; font-weight: 600; color: var(--c-text); align-self: baseline; padding-right: var(--s3); }
+.ps .pr { align-self: baseline; white-space: nowrap; text-align: right; }
+.pr .mk2 { font-size: var(--f-sm); font-weight: 600; margin-right: 4px; }
+.pr .rd { font-size: 17px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.ps .pb { grid-column: 2 / -1; margin-top: 6px; }
+.ps.ps-nr { grid-template-columns: 20px 1fr; }
+.pb p { margin: 0; }
+.pb p + p { margin-top: 6px; }
+.pb .pa { font-size: var(--f-md); color: var(--c-text); }
+.pb .pw { font-size: var(--f-md); color: var(--c-text-dim); }
+.pb .pnote { font-size: var(--f-sm); color: var(--c-text-dim); }
+.amt { font-weight: 600; white-space: nowrap; }
+.wk-r { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); padding: 7px var(--s3) 0; }
+.wk + .wk { border-top: var(--b-row); }
+.wk { padding-bottom: 7px; }
+.wk-i { font-size: var(--f-md); color: var(--c-text); }
+.wk-a { font-size: var(--f-md); font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.wk-a .amt { font-weight: 600; }
+.wk-n { font-size: var(--f-sm); color: var(--c-text-dim); padding: 2px var(--s3) 0; }
+#plan .sec-h { border-top: var(--b-row); }
+.hist-row details .ps { padding-left: 0; padding-right: 0; }
+.hist-row details .wk-r, .hist-row details .wk-n { padding-left: 0; padding-right: 0; }
+.hist-row details .sec-h { padding-left: 0; padding-right: 0; border-top: 0; }
 .ir { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); padding: 7px var(--s3); }
 .iv.dim { font-size: var(--f-sm); font-weight: 400; color: var(--c-text-dim); }
 .allok { padding: var(--s3); font-size: var(--f-md); font-weight: 600; color: var(--c-ok); }
@@ -195,8 +232,8 @@ footer a { color: var(--c-accent); }
   </section>
 
   <section class="panel" aria-labelledby="h-rec" id="rec-panel" hidden>
-    <div class="ph"><h2 id="h-rec">Store recommendations</h2><span class="legend" id="rec-when"></span></div>
-    <p class="recbox" id="rec"></p>
+    <div class="ph"><h2 id="h-rec" tabindex="-1">Treatment plan</h2><span class="legend" id="rec-when"></span></div>
+    <div id="plan"></div>
   </section>
 
   <section class="panel" aria-labelledby="h-trends">
@@ -229,7 +266,7 @@ footer a { color: var(--c-accent); }
 
   <footer>Design notes: <a href="DESIGN.md">DESIGN.md</a></footer>
 </div>
-<script src="calc.js?v=5d7f8bc5"></script>
-<script src="app.js?v=5d7f8bc5"></script>
+<script src="calc.js?v=df17bd1a"></script>
+<script src="app.js?v=df17bd1a"></script>
 </body>
 </html>
