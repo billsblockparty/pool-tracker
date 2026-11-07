@@ -7,7 +7,8 @@ Status: on GitHub Pages (main / root, `.nojekyll`). The earlier Claude artifact 
 Single source of truth for the dashboard's look. Update this file with every UI change.
 
 ## Data
-- Static JSON files, fetched once per page load with `cache: "no-store"`. The page source holds no readings.
+- Static JSON files, fetched once per page load with `cache: "no-store"`.
+- Asset versioning: index.html loads `calc.js?v=<hash>` and `app.js?v=<hash>`, where the hash is the first 8 hex digits of a SHA-1 of calc.js + app.js. Run `tools/version-assets.sh` before every commit that changes either file, so a cached page can only load the scripts it shipped with. (A commit hash can't be used because a commit can't contain its own hash.) The page source holds no readings.
 - `data/tests.json`: array of tests, oldest-first or any order (the page sorts). Each record: `id` (`t-YYYYMMDD-HHMM`, or `t-YYYYMMDD-x` when time unknown), `date` (YYYY-MM-DD), `time` (HH:MM or null), `source`, `score` (%), `fc tc ph ta ch cya fe cu po4 salt temp` (numbers or absent), `nextTest`, `recommendations`, `notes`, `createdAt`, `edits` (list of corrections).
 - Source labels are generic: "Store" for store-tested reports, "Home kit" for strips/kits. No store or brand names.
 - Tests are added by a commit that appends a record to `tests.json`. A test is never overwritten; a correction edits only that record and adds an entry to its `edits`.
@@ -66,6 +67,7 @@ Radius: panels 6px; tooltip 4px; stat grid inner 4px. Borders: panels 2px frame;
 - Range bar uses no zone colours: only the neutral band, with status carried by the marker's shape and fill. The track sits on `--c-divider` because the band on it is 3.55:1, vs 2.91:1 on the alternate row. Band on track 3.55, marker ring on band 3.71, marker fills on track ok 10.18 / warn 10.30 / bad 7.51 / line 16.30.
 - Status shown by shape as well as colour on charts and bars (never colour alone).
 - Units shown beside names in Ideal ranges at 900px+, because ppb (phosphates) vs ppm was ambiguous without them.
+- Asset URLs carry a version on every change: GitHub Pages lets browsers cache files for up to 10 minutes, and a new index.html with a cached old app.js rendered mismatched markup.
 - GitHub Pages, so anyone with the link can view without a Claude sign-in. Data moved from the artifact database to JSON files; range editing removed from the page (changes go through the builder).
 - History is a per-test grid, not a wide table, so it fits 360px without scrolling sideways.
 - Change arrows (▲▼) are neutral text, not status colours.
@@ -80,3 +82,4 @@ Radius: panels 6px; tooltip 4px; stat grid inner 4px. Borders: panels 2px frame;
 - 2026-11-06: range bar v2: fixed zones (band always 30–70%), band limits under the band, pinning beyond 3× margin, distance-only text, unit slot in the Value cell, bar fills the Range column at 900px+.
 - 2026-11-06: Latest results v3: grouped blocks, full names with abbreviations, status phrase with distance, reading label on the bar, change line; table, header row, distance column and unit slot removed.
 - 2026-11-06: Latest results v4: Needs attention / In range / Info sections, action phrases with targets, mini gauge, fixed mark slot; header suffix "change vs" dropped; v3 blocks and large bar retired.
+- 2026-11-06: cache-busting: script URLs versioned with a content hash (tools/version-assets.sh); no visual change.
