@@ -345,21 +345,22 @@
     return b;
   }
   // Step title tile pair: CURRENT (the step's reading, status fill) and TARGET (the ideal range, band fill). Not interactive.
-  function tile(cls, mark, value, unit) {
+  function tile(cls, mark, value) { // mark + value only; the unit sits outside, in its own slot (unitSlot)
     var tin = el('span', { class: 'tin' });
     if (mark) { tin.appendChild(el('span', { class: 'tv tmk', 'aria-hidden': 'true', text: mark })); tin.appendChild(document.createTextNode(' ')); }
     tin.appendChild(el('span', { class: 'tv', text: value }));
-    if (unit) tin.appendChild(el('span', { class: 'tu', text: unit }));
     return el('span', { class: 'tile ' + cls }, [tin]);
   }
+  function unitSlot(unit) { return el('span', { class: 'tun', text: unit || '' }); }
   function tilePair(t, k) {
     var m = MBY[k], v = C.value(t, k), r = state.ranges;
     if (!m || !r[k]) return null;
     var s = v === null ? { level: 'na' } : C.status(t, k, r);
-    var cur = v === null ? tile('tile-t', null, '—', null) : tile('tile-' + s.level, ICON[s.level], C.show(t, m), m.unit);
-    var tgt = k === 'cc' ? '≤ ' + numStr(r.cc.hi) : rangeText({ k: k }); // range text without unit; unit in its own span
-    return el('div', { class: 'tp' }, [el('span', { class: 'tpl', text: 'Current' }), cur,
-      el('span', { class: 'tpl', text: 'Target' }), tile('tile-t', null, tgt, m.unit)]);
+    var cur = v === null ? tile('tile-t', null, '—') : tile('tile-' + s.level, ICON[s.level], C.show(t, m));
+    var tgt = k === 'cc' ? '≤ ' + numStr(r.cc.hi) : rangeText({ k: k }); // range text without unit
+    var u = v === null ? '' : m.unit;
+    return el('div', { class: 'tp' }, [el('span', { class: 'tpl', text: 'Current' }), cur, unitSlot(u),
+      el('span', { class: 'tpl', text: 'Target' }), tile('tile-t', null, tgt), unitSlot(m.unit)]);
   }
   // Step header band: "STEP N" left, 2px rule across, optional value right (mirrors the dynasty tracker's bye line).
   function band(leftText, right) {
@@ -399,13 +400,24 @@
     if (tp.dataset.done) return;
     tp.querySelectorAll('.tpl').forEach(function (l) { l.style.transform = 'translateY(' + capOffset(l).toFixed(2) + 'px)'; });
     tp.querySelectorAll('.tile').forEach(function (tl) {
-      var tin = tl.firstChild, parts = tin.querySelectorAll('.tv, .tu'), first = parts[0], last = parts[parts.length - 1];
+      var tin = tl.firstChild, parts = tin.querySelectorAll('.tv'), first = parts[0], last = parts[parts.length - 1];
       // bearings of the first and last glyph alone (canvas ignores tabular-nums, which widens "." and "–")
       tl.dataset.pl = 8 - ink(getComputedStyle(first), first.textContent.charAt(0)).l;
       tl.dataset.pr = 8 - ink(getComputedStyle(last), last.textContent.slice(-1)).r;
       tin.style.transform = 'translateY(' + capOffset(tin).toFixed(2) + 'px)';
+      // unit: 6px visible gap after the tile (its first glyph's side bearing subtracted), baseline on the value's baseline
+      var un = tl.nextElementSibling;
+      if (!un.textContent) return;
+      un.style.marginLeft = (6 - ink(getComputedStyle(un), un.textContent.charAt(0)).l).toFixed(2) + 'px';
+      var vb = probeTop(tl.querySelector('.tv:not(.tmk)')) - tl.getBoundingClientRect().top;
+      var ub = probeTop(un) - un.getBoundingClientRect().top;
+      un.style.transform = 'translateY(' + (vb - ub).toFixed(2) + 'px)';
     });
     tp.dataset.done = '1';
+  }
+  function probeTop(e) { // y of e's baseline (zero-size inline-block probe)
+    var pr = el('span', { style: 'display:inline-block;width:0;height:0;vertical-align:baseline' });
+    e.appendChild(pr); var y = pr.getBoundingClientRect().top; e.removeChild(pr); return y;
   }
   function sizeTile(tl, w, nat) { // w = shared width; nat = this tile's natural width
     var x = (w - nat) / 2;
@@ -424,6 +436,13 @@
       });
     });
     tiles.forEach(function (t) { t.nat = t.el.getBoundingClientRect().width; });
+    // unit slots: one width per panel = the widest unit, so labels, tiles and units line up across steps
+    // (same outer width = gap + slot for every unit, including empty ones, so whatever follows starts at one x)
+    var units = Array.prototype.slice.call(host.querySelectorAll('.tun'));
+    units.forEach(function (u) { u.style.width = ''; });
+    var ml = function (u) { return parseFloat(getComputedStyle(u).marginLeft); };
+    var outer = Math.max.apply(null, units.map(function (u) { return ml(u) + u.getBoundingClientRect().width; }));
+    units.forEach(function (u) { u.style.width = (outer - ml(u)).toFixed(2) + 'px'; });
     var max = function (f) { return Math.max.apply(null, tiles.filter(f).map(function (t) { return t.nat; })); };
     var inl = wide;
     if (wide) { // try the title line with per-column shared widths; every step must fit

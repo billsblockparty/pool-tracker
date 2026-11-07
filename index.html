@@ -151,17 +151,18 @@ button.nr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: -2
 .sth.inl .tp { margin-top: var(--tp-y, 0px); }
 .tpl { font-size: var(--f-xs); font-weight: 600; color: var(--c-text-dim); text-transform: uppercase; letter-spacing: 0.12em;
   line-height: 24px; margin-right: calc(8px - 0.12em); }
-.tile + .tpl { margin-left: var(--s4); }
+.tun + .tpl { margin-left: var(--s4); }
+/* Unit outside the tile: 6px visible gap (side bearing subtracted in JS), baseline on the value's; one slot width per panel */
+.tun { display: block; flex: 0 0 auto; box-sizing: content-box; font-size: var(--f-sm); font-weight: 500; color: var(--c-text-dim); line-height: 24px; white-space: nowrap; margin-left: 6px; }
 /* Pair wider than the content (narrow screens, long values): two rows, labels in one column so the tiles share a left edge */
-.tp.two { display: grid; grid-template-columns: auto auto; justify-content: start; justify-items: start; row-gap: var(--s2); }
-.tp.two .tile + .tpl { margin-left: 0; }
+.tp.two { display: grid; grid-template-columns: auto auto auto; justify-content: start; justify-items: start; row-gap: var(--s2); }
+.tp.two .tun + .tpl { margin-left: 0; }
 .tile { display: block; height: 24px; padding: 0 8px; border-radius: var(--r-ctl); box-shadow: 2px 2px 0 var(--c-frame);
   font-size: 14px; line-height: 24px; color: var(--c-frame); cursor: default; user-select: none; }
 .tile-ok { background: var(--c-ok); } .tile-warn { background: var(--c-warn); } .tile-bad { background: var(--c-bad); }
 .tile-t { background: var(--c-band); color: var(--c-text); }
 .tin { display: block; }
 .tv { font-weight: 600; font-variant-numeric: tabular-nums; }
-.tu { font-size: var(--f-xs); font-weight: 400; line-height: 1; margin-left: 3px; }
 .pb p { margin: 0; }
 .ck { list-style: none; margin: 0; padding: 0; }
 .cki { display: grid; grid-template-columns: 24px 1fr; }
@@ -311,7 +312,7 @@ footer a { color: var(--c-accent); }
 
   <footer>Design notes: <a href="DESIGN.md">DESIGN.md</a></footer>
 </div>
-<script src="calc.js?v=1a6668b6"></script>
-<script src="app.js?v=1a6668b6"></script>
+<script src="calc.js?v=e3b80a7d"></script>
+<script src="app.js?v=e3b80a7d"></script>
 </body>
 </html>
