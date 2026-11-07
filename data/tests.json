@@ -14,6 +14,10 @@
       {
         "at": "2026-11-07T00:30:00Z",
         "what": "recommendations text replaced by structured plan (metals step omitted by rule). No readings changed."
+      },
+      {
+        "at": "2026-11-07T00:55:00Z",
+        "what": "plan: choices stored as option lists (OR removed); algaecide note capitalised. No readings changed."
       }
     ],
     "fc": 0.25,
@@ -62,7 +66,12 @@
           "key": "ph",
           "title": "Lower pH",
           "actions": [
-            "Add muriatic acid **46 fl oz** in total (never more than **15 fl oz** at once), OR store-brand dry acid **3 lb 9 oz** (never more than **1 lb 2 oz** at once).",
+            {
+              "choose": [
+                "Muriatic acid **46 fl oz** in total (never more than **15 fl oz** at once)",
+                "Store-brand dry acid **3 lb 9 oz** (never more than **1 lb 2 oz** at once)"
+              ]
+            },
             "Add the acid to a clean bucket holding at least 1 gal of pool water, then pour it in with the pump running."
           ],
           "waits": [
@@ -78,7 +87,14 @@
           "key": "fc",
           "title": "Raise free chlorine",
           "actions": [
-            "Add one of: store-brand calcium hypochlorite shock (73%) **5 oz**, OR store-brand dichlor granules **6 oz**, OR liquid chlorine **32 fl oz**, with the pump running."
+            {
+              "choose": [
+                "Store-brand calcium hypochlorite shock (73%) **5 oz**",
+                "Store-brand dichlor granules **6 oz**",
+                "Liquid chlorine **32 fl oz**"
+              ]
+            },
+            "Add it with the pump running."
           ],
           "waits": [
             "Wait 4 h."
@@ -93,7 +109,12 @@
           "title": "Raise stabiliser (CYA)",
           "actions": [
             "Clean the filter first.",
-            "Add store-brand liquid stabiliser **1 gal 34 fl oz** into the skimmer with the pump running, OR store-brand granular stabiliser **3 lb 6 oz** in two halves: mix each half in a bucket of pool water and pour into the skimmer."
+            {
+              "choose": [
+                "Store-brand liquid stabiliser **1 gal 34 fl oz**, poured into the skimmer with the pump running",
+                "Store-brand granular stabiliser **3 lb 6 oz** in two halves: mix each half in a bucket of pool water and pour into the skimmer"
+              ]
+            }
           ],
           "waits": [
             "Wait 2 h between halves; wait 2 h after."
@@ -136,7 +157,7 @@
         {
           "item": "Algaecide",
           "amount": "**3 fl oz**",
-          "note": "only with heavy use, animals or debris"
+          "note": "Only with heavy use, animals or debris"
         }
       ]
     }
@@ -152,6 +173,10 @@
       {
         "at": "2026-11-07T00:30:00Z",
         "what": "structured plan added. No readings changed."
+      },
+      {
+        "at": "2026-11-07T00:55:00Z",
+        "what": "plan: choices stored as option lists (OR removed); algaecide note capitalised. No readings changed."
       }
     ],
     "fc": 2.33,
@@ -215,7 +240,12 @@
           "title": "Raise stabiliser (CYA)",
           "actions": [
             "Clean the filter first.",
-            "Add store-brand liquid stabiliser **1 gal 34 fl oz** into the skimmer with the pump running, OR store-brand granular stabiliser **3 lb 6 oz** in two halves: mix each half in a bucket of pool water and pour into the skimmer."
+            {
+              "choose": [
+                "Store-brand liquid stabiliser **1 gal 34 fl oz**, poured into the skimmer with the pump running",
+                "Store-brand granular stabiliser **3 lb 6 oz** in two halves: mix each half in a bucket of pool water and pour into the skimmer"
+              ]
+            }
           ],
           "waits": [
             "Wait 2 h between halves; wait 2 h after."
@@ -244,7 +274,7 @@
         {
           "item": "Algaecide",
           "amount": "**3 fl oz**",
-          "note": "only with heavy use, animals or debris"
+          "note": "Only with heavy use, animals or debris"
         }
       ]
     }

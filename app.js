@@ -294,7 +294,12 @@
   }
   function stepBody(step) {
     var b = el('div', { class: 'pb' });
-    (step.actions || []).forEach(function (x) { b.appendChild(richText('pa', x)); });
+    (step.actions || []).forEach(function (x) {
+      if (x && x.choose) { // alternatives: lead line, then one bulleted line per option
+        b.appendChild(el('p', { class: 'pa', text: 'Use one of these:' }));
+        x.choose.forEach(function (o) { b.appendChild(richText('pa po', o, '• ')); });
+      } else b.appendChild(richText('pa', x));
+    });
     (step.waits || []).forEach(function (x) { b.appendChild(richText('pw', x)); });
     (step.notes || []).forEach(function (x) { b.appendChild(richText('pnote', x, 'Note: ')); });
     return b;
@@ -329,13 +334,20 @@
     if (t.plan.weekly && t.plan.weekly.length) out = out.concat([el('h3', { class: 'sec-h', text: 'Every week' })], weeklyRows(t.plan.weekly));
     return out;
   }
+  // Plan panel: steps left, "Every week" right at 900px+ (same 1.4fr / 1fr grid as Latest results).
+  function planPanelNodes(t) {
+    var a = el('div', { class: 'col-a' }, (t.plan.steps || []).map(function (s) { return stepRow(s, t); }));
+    var b = el('div', { class: 'col-b' });
+    if (t.plan.weekly && t.plan.weekly.length) [el('h3', { class: 'sec-h', text: 'Every week' })].concat(weeklyRows(t.plan.weekly)).forEach(function (n) { b.appendChild(n); });
+    return [el('div', { class: 'pl2' }, [a, b])];
+  }
   function renderRec(latest) {
     var p = $('rec-panel'), host = $('plan');
     clear(host);
     if (!latest || !latest.plan || !(latest.plan.steps || []).length) { p.hidden = true; return; }
     p.hidden = false;
     $('rec-when').textContent = 'from ' + dShort(latest.date) + ' test';
-    planNodes(latest).forEach(function (n) { host.appendChild(n); });
+    planPanelNodes(latest).forEach(function (n) { host.appendChild(n); });
   }
 
   // ---------- charts ----------
