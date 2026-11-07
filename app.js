@@ -222,9 +222,10 @@
     }
     return area;
   }
-  function needRow(t, prev, m, s) {
+  function needRow(t, prev, m, s, step) {
     var id = 'fix-' + m.k;
     var row = el('button', { type: 'button', class: 'nr', 'aria-expanded': 'false', 'aria-controls': id });
+    row.appendChild(el('span', { class: 'pn', 'aria-hidden': 'true', text: step ? String(step.n) : '' }));
     row.appendChild(nameEl('nn', m.k));
     row.appendChild(readingEl('nv', t, m));
     row.appendChild(el('span', { class: 'na st-' + s.level }, [el('span', { class: 'mk', 'aria-hidden': 'true', text: ICON[s.level] }), actionText(t, m, s)]));
@@ -243,8 +244,10 @@
     return [row, area];
   }
   function lineRow(left, right) { return el('div', { class: 'ir' }, [left, right]); }
-  function section(title, rows) {
-    return el('div', { class: 'sec' }, [el('h3', { class: 'sec-h', text: title })].concat(rows));
+  function section(title, rows, aside) {
+    var h = el('h3', { class: 'sec-h' + (aside ? ' sec-ha' : '') }, [title]);
+    if (aside) h.appendChild(el('span', { class: 'sec-as', text: aside }));
+    return el('div', { class: 'sec' }, [h].concat(rows));
   }
   function drawBars() { // mark slot: width of "!!" + 4px, so action words start at one x
     var probe = document.querySelector('#latest .na .mk');
@@ -266,8 +269,13 @@
       (s.level === 'bad' ? bad : s.level === 'warn' ? warn : ok).push([m, s]);
     });
     var need = bad.concat(warn);
+    // Treatment order: rows with a step in the latest plan sort by step number; the rest keep the old order after them.
+    var steps = (latest.plan && latest.plan.steps) || [], stepOf = {};
+    steps.forEach(function (s) { stepOf[s.key] = s; });
+    if (steps.length) need = need.filter(function (x) { return stepOf[x[0].k]; }).sort(function (p, q) { return stepOf[p[0].k].n - stepOf[q[0].k].n; })
+      .concat(need.filter(function (x) { return !stepOf[x[0].k]; }));
     var colA = el('div', { class: 'col-a' }), colB = el('div', { class: 'col-b' });
-    colA.appendChild(need.length ? section('Needs attention · ' + need.length, [].concat.apply([], need.map(function (x) { return needRow(latest, prev, x[0], x[1]); })))
+    colA.appendChild(need.length ? section('Needs attention · ' + need.length, [].concat.apply([], need.map(function (x) { return needRow(latest, prev, x[0], x[1], stepOf[x[0].k]); })), steps.length ? 'in the order to treat' : null)
       : el('div', { class: 'sec' }, [el('div', { class: 'allok', text: 'Everything in range ✓' + VS })]));
     if (ok.length) colB.appendChild(section('In range · ' + ok.length, ok.map(function (x) {
       var rd = readingEl('iv', latest, x[0]); rd.appendChild(el('span', { class: 'okm', text: ' ✓' + VS }));
@@ -282,26 +290,42 @@
   }
 
   // ---------- Treatment plan ----------
-  // "**amount**" in plan text renders as a bold, unbreakable amount; everything else is plain text.
-  function richText(cls, txt, prefix) {
-    var p = el('p', { class: cls });
-    if (prefix) p.appendChild(document.createTextNode(prefix));
+  // "**…**" in plan text marks an amount or duration: rendered in --c-dose, weight 600, never split.
+  function richInto(node, txt) {
     String(txt).split('**').forEach(function (part, i) {
-      if (!part) return;
-      p.appendChild(i % 2 ? el('span', { class: 'amt', text: part }) : document.createTextNode(part));
+      if (part) node.appendChild(i % 2 ? el('span', { class: 'dose', text: part }) : document.createTextNode(part));
     });
-    return p;
+    return node;
   }
+  // Checklist step body: numbered items (do / choose / wait), then notes (safety / tip).
   function stepBody(step) {
-    var b = el('div', { class: 'pb' });
-    (step.actions || []).forEach(function (x) {
-      if (x && x.choose) { // alternatives: lead line, then one bulleted line per option
-        b.appendChild(el('p', { class: 'pa', text: 'Use one of these:' }));
-        x.choose.forEach(function (o) { b.appendChild(richText('pa po', o, '• ')); });
-      } else b.appendChild(richText('pa', x));
+    var b = el('div', { class: 'pb' }), list = el('ol', { class: 'ck' });
+    (step.items || []).forEach(function (it, i) {
+      var body = el('div', { class: 'ckb' });
+      if (it.kind === 'choose') {
+        body.appendChild(richInto(el('p', { class: 'ckt' }), it.lead));
+        (it.options || []).forEach(function (o) {
+          var opt = el('div', { class: 'opt' }, [el('span', { class: 'ob', 'aria-hidden': 'true', text: '•' })]);
+          var line = el('p', { class: 'on' }, [el('span', { class: 'onm', text: o.name })]);
+          line.appendChild(document.createTextNode('  '));
+          richInto(line, o.amount);
+          var col = el('div', { class: 'oc' }, [line]);
+          if (o.detail) col.appendChild(richInto(el('p', { class: 'od' }), o.detail));
+          opt.appendChild(col);
+          body.appendChild(opt);
+        });
+      } else body.appendChild(richInto(el('p', { class: 'ckt' }), it.text));
+      list.appendChild(el('li', { class: 'cki' }, [el('span', { class: 'ckn', 'aria-hidden': 'true', text: String(i + 1) }), body]));
     });
-    (step.waits || []).forEach(function (x) { b.appendChild(richText('pw', x)); });
-    (step.notes || []).forEach(function (x) { b.appendChild(richText('pnote', x, 'Note: ')); });
+    b.appendChild(list);
+    if ((step.notes || []).length) {
+      var nb = el('div', { class: 'nts' });
+      step.notes.forEach(function (n) {
+        var p = el('p', { class: 'nt' }, [el('span', { class: 'ntl', text: n.kind === 'safety' ? 'Before swimming: ' : 'Good to know: ' })]);
+        nb.appendChild(richInto(p, n.text));
+      });
+      b.appendChild(nb);
+    }
     return b;
   }
   function markReading(t, k) {
@@ -321,8 +345,7 @@
   }
   function weeklyRows(list) {
     return (list || []).map(function (w) {
-      var a = el('span', { class: 'wk-a' });
-      String(w.amount).split('**').forEach(function (part, i) { if (part) a.appendChild(i % 2 ? el('span', { class: 'amt', text: part }) : document.createTextNode(part)); });
+      var a = richInto(el('span', { class: 'wk-a' }), w.amount);
       var row = el('div', { class: 'wk' }, [el('div', { class: 'wk-r' }, [el('span', { class: 'wk-i', text: w.item }), a])]);
       if (w.note) row.appendChild(el('div', { class: 'wk-n', text: w.note }));
       return row;

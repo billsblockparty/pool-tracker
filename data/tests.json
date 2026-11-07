@@ -18,6 +18,10 @@
       {
         "at": "2026-11-07T00:55:00Z",
         "what": "plan: choices stored as option lists (OR removed); algaecide note capitalised. No readings changed."
+      },
+      {
+        "at": "2026-11-07T01:05:00Z",
+        "what": "plan rewritten as a checklist (items: do/choose/wait; notes: safety/tip); wording from the owner. No readings changed."
       }
     ],
     "fc": 0.25,
@@ -37,111 +41,197 @@
           "n": 1,
           "key": "ch",
           "title": "Lower calcium hardness",
-          "actions": [
-            "Partially drain and refill with fresh water."
+          "items": [
+            {
+              "kind": "do",
+              "text": "Partially drain the pool and refill it with fresh water."
+            }
           ],
-          "waits": [],
           "notes": [
-            "If you drain, refill promptly and skip the remaining steps unless there is algae, which must be treated first.",
-            "Don't drain if the water table is high."
+            {
+              "kind": "tip",
+              "text": "If you drain, refill straight away and skip the other steps, unless there's algae: treat that first."
+            },
+            {
+              "kind": "tip",
+              "text": "Don't drain if the water table is high."
+            }
           ]
         },
         {
           "n": 2,
           "key": "ta",
           "title": "Raise alkalinity",
-          "actions": [
-            "Add store-brand alkalinity increaser, **6 lb 13 oz** in total; never more than **9 lb** at once. Broadcast with the pump running."
-          ],
-          "waits": [
-            "Wait 4 h between doses; retest after half the total.",
-            "Wait 4 h after the last dose."
+          "items": [
+            {
+              "kind": "do",
+              "text": "With the pump running, spread alkalinity increaser over the water: **6 lb 13 oz** in total, never more than **9 lb** at once."
+            },
+            {
+              "kind": "do",
+              "text": "Retest after adding half."
+            },
+            {
+              "kind": "wait",
+              "text": "If you add it in more than one dose, wait **4 hours** between doses."
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **4 hours** after the last dose."
+            }
           ],
           "notes": [
-            "Not on the same day as calcium increaser."
+            {
+              "kind": "tip",
+              "text": "Don't add it on the same day as calcium increaser."
+            }
           ]
         },
         {
           "n": 3,
           "key": "ph",
           "title": "Lower pH",
-          "actions": [
+          "items": [
             {
-              "choose": [
-                "Muriatic acid **46 fl oz** in total (never more than **15 fl oz** at once)",
-                "Store-brand dry acid **3 lb 9 oz** (never more than **1 lb 2 oz** at once)"
+              "kind": "choose",
+              "lead": "Use one acid, never both:",
+              "options": [
+                {
+                  "name": "Muriatic acid",
+                  "amount": "**46 fl oz** in total",
+                  "detail": "Never more than **15 fl oz** at once."
+                },
+                {
+                  "name": "Dry acid",
+                  "amount": "**3 lb 9 oz** in total",
+                  "detail": "Never more than **1 lb 2 oz** at once."
+                }
               ]
             },
-            "Add the acid to a clean bucket holding at least 1 gal of pool water, then pour it in with the pump running."
+            {
+              "kind": "do",
+              "text": "Add each dose to a bucket with at least **1 gallon** of pool water (acid into water, never water into acid), then pour it in with the pump running."
+            },
+            {
+              "kind": "do",
+              "text": "Retest after adding half."
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **4 hours** between doses and **4 hours** after the last one."
+            }
           ],
-          "waits": [
-            "Wait 4 h between doses; retest after half the total.",
-            "Wait 4 h after the last dose."
-          ],
-          "notes": [
-            "Use one type of acid only, never both. Always add acid to water."
-          ]
+          "notes": []
         },
         {
           "n": 4,
           "key": "fc",
           "title": "Raise free chlorine",
-          "actions": [
+          "items": [
             {
-              "choose": [
-                "Store-brand calcium hypochlorite shock (73%) **5 oz**",
-                "Store-brand dichlor granules **6 oz**",
-                "Liquid chlorine **32 fl oz**"
+              "kind": "choose",
+              "lead": "With the pump running, add one of these:",
+              "options": [
+                {
+                  "name": "Calcium hypochlorite shock (73%)",
+                  "amount": "**5 oz**",
+                  "detail": null
+                },
+                {
+                  "name": "Dichlor granules",
+                  "amount": "**6 oz**",
+                  "detail": null
+                },
+                {
+                  "name": "Liquid chlorine",
+                  "amount": "**32 fl oz**",
+                  "detail": null
+                }
               ]
             },
-            "Add it with the pump running."
-          ],
-          "waits": [
-            "Wait 4 h."
+            {
+              "kind": "wait",
+              "text": "Wait **4 hours**."
+            }
           ],
           "notes": [
-            "Don't swim until FC is 2–4 ppm. Consider raising the salt generator output."
+            {
+              "kind": "safety",
+              "text": "Don't swim until free chlorine is **2–4 ppm**."
+            },
+            {
+              "kind": "tip",
+              "text": "Consider turning up the salt generator."
+            }
           ]
         },
         {
           "n": 5,
           "key": "cya",
           "title": "Raise stabiliser (CYA)",
-          "actions": [
-            "Clean the filter first.",
+          "items": [
             {
-              "choose": [
-                "Store-brand liquid stabiliser **1 gal 34 fl oz**, poured into the skimmer with the pump running",
-                "Store-brand granular stabiliser **3 lb 6 oz** in two halves: mix each half in a bucket of pool water and pour into the skimmer"
+              "kind": "do",
+              "text": "Clean the filter."
+            },
+            {
+              "kind": "choose",
+              "lead": "Add one of these:",
+              "options": [
+                {
+                  "name": "Liquid stabiliser",
+                  "amount": "**1 gal 34 fl oz**",
+                  "detail": "Pour into the skimmer with the pump running."
+                },
+                {
+                  "name": "Granular stabiliser",
+                  "amount": "**3 lb 6 oz**",
+                  "detail": "In two halves: mix each in a bucket of pool water, pour into the skimmer, wait **2 hours** between halves."
+                }
               ]
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **2 hours**."
             }
           ],
-          "waits": [
-            "Wait 2 h between halves; wait 2 h after."
-          ],
           "notes": [
-            "With the granular kind, don't clean the filter for 72 h. Retest after 24 h (liquid) or 72 h (granular)."
+            {
+              "kind": "tip",
+              "text": "With granular, don't clean the filter for **72 hours**. Retest after **24 hours** (liquid) or **72 hours** (granular)."
+            }
           ]
         },
         {
           "n": 6,
           "key": "salt",
           "title": "Raise salt",
-          "actions": [
-            "Add pool salt **50 lb 10 oz** slowly around the pool edge with the pump running; brush the bottom."
-          ],
-          "waits": [
-            "Wait 24 h for it to dissolve and circulate."
+          "items": [
+            {
+              "kind": "do",
+              "text": "With the pump running, pour **50 lb 10 oz** of pool salt slowly around the pool edge."
+            },
+            {
+              "kind": "do",
+              "text": "Brush the pool floor."
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **24 hours** for it to dissolve."
+            }
           ],
           "notes": [
-            "Don't add salt if the water is below 60 °F."
+            {
+              "kind": "tip",
+              "text": "Don't add salt if the water is below **60 °F**."
+            }
           ]
         }
       ],
       "weekly": [
         {
           "item": "Salt generator",
-          "amount": "FC 1–4 ppm",
+          "amount": "FC **1–4 ppm**",
           "note": "Set the generator to hold this"
         },
         {
@@ -177,6 +267,10 @@
       {
         "at": "2026-11-07T00:55:00Z",
         "what": "plan: choices stored as option lists (OR removed); algaecide note capitalised. No readings changed."
+      },
+      {
+        "at": "2026-11-07T01:05:00Z",
+        "what": "plan rewritten as a checklist (items: do/choose/wait; notes: safety/tip); wording from the owner. No readings changed."
       }
     ],
     "fc": 2.33,
@@ -196,69 +290,119 @@
           "n": 1,
           "key": "ch",
           "title": "Lower calcium hardness",
-          "actions": [
-            "Partially drain and refill with fresh water."
+          "items": [
+            {
+              "kind": "do",
+              "text": "Partially drain the pool and refill it with fresh water."
+            }
           ],
-          "waits": [],
           "notes": [
-            "If you drain, refill promptly and skip the remaining steps unless there is algae, which must be treated first.",
-            "Don't drain if the water table is high."
+            {
+              "kind": "tip",
+              "text": "If you drain, refill straight away and skip the other steps, unless there's algae: treat that first."
+            },
+            {
+              "kind": "tip",
+              "text": "Don't drain if the water table is high."
+            }
           ]
         },
         {
           "n": 2,
           "key": "ta",
           "title": "Raise alkalinity",
-          "actions": [
-            "Add store-brand alkalinity increaser, **8 lb 4 oz** in total; never more than **9 lb** at once. Broadcast with the pump running."
-          ],
-          "waits": [
-            "Wait 4 h between doses; retest after half the total.",
-            "Wait 4 h after the last dose."
+          "items": [
+            {
+              "kind": "do",
+              "text": "With the pump running, spread alkalinity increaser over the water: **8 lb 4 oz** in total, never more than **9 lb** at once."
+            },
+            {
+              "kind": "do",
+              "text": "Retest after adding half."
+            },
+            {
+              "kind": "wait",
+              "text": "If you add it in more than one dose, wait **4 hours** between doses."
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **4 hours** after the last dose."
+            }
           ],
           "notes": [
-            "Not on the same day as calcium increaser."
+            {
+              "kind": "tip",
+              "text": "Don't add it on the same day as calcium increaser."
+            }
           ]
         },
         {
           "n": 3,
           "key": "cc",
           "title": "Lower combined chlorine",
-          "actions": [
-            "Add store-brand oxidising shock **15 oz** with the pump running."
-          ],
-          "waits": [
-            "Wait 15 min."
+          "items": [
+            {
+              "kind": "do",
+              "text": "With the pump running, add oxidising shock: **15 oz**."
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **15 minutes**."
+            }
           ],
           "notes": [
-            "Don't swim until FC is 2–4 ppm. Retest after 24 h."
+            {
+              "kind": "safety",
+              "text": "Don't swim until free chlorine is **2–4 ppm**."
+            },
+            {
+              "kind": "tip",
+              "text": "Retest after **24 hours**."
+            }
           ]
         },
         {
           "n": 4,
           "key": "cya",
           "title": "Raise stabiliser (CYA)",
-          "actions": [
-            "Clean the filter first.",
+          "items": [
             {
-              "choose": [
-                "Store-brand liquid stabiliser **1 gal 34 fl oz**, poured into the skimmer with the pump running",
-                "Store-brand granular stabiliser **3 lb 6 oz** in two halves: mix each half in a bucket of pool water and pour into the skimmer"
+              "kind": "do",
+              "text": "Clean the filter."
+            },
+            {
+              "kind": "choose",
+              "lead": "Add one of these:",
+              "options": [
+                {
+                  "name": "Liquid stabiliser",
+                  "amount": "**1 gal 34 fl oz**",
+                  "detail": "Pour into the skimmer with the pump running."
+                },
+                {
+                  "name": "Granular stabiliser",
+                  "amount": "**3 lb 6 oz**",
+                  "detail": "In two halves: mix each in a bucket of pool water, pour into the skimmer, wait **2 hours** between halves."
+                }
               ]
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **2 hours**."
             }
           ],
-          "waits": [
-            "Wait 2 h between halves; wait 2 h after."
-          ],
           "notes": [
-            "With the granular kind, don't clean the filter for 72 h. Retest after 24 h (liquid) or 72 h (granular)."
+            {
+              "kind": "tip",
+              "text": "With granular, don't clean the filter for **72 hours**. Retest after **24 hours** (liquid) or **72 hours** (granular)."
+            }
           ]
         }
       ],
       "weekly": [
         {
           "item": "Salt generator",
-          "amount": "FC 1–4 ppm",
+          "amount": "FC **1–4 ppm**",
           "note": "Set the generator to hold this"
         },
         {
