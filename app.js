@@ -54,12 +54,19 @@
   function statusNode(s) {
     return el('span', { class: 'st st-' + s.level }, [el('span', { class: 'ico', 'aria-hidden': 'true', text: ICON[s.level] }), word(s)]);
   }
+  // Every displayed numeric range: "lo – hi" with non-breaking spaces round the en dash, so a range never wraps.
+  // Negative ranges (LSI) keep " to " wording.
+  var NB = '\u00a0';
+  function rangeStr(lo, hi, plusHi) {
+    if (lo < 0) return numStr(lo) + NB + 'to' + NB + (plusHi && hi > 0 ? '+' : '') + numStr(hi);
+    return numStr(lo) + NB + '–' + NB + numStr(hi);
+  }
+  function spaceRanges(txt) { return String(txt).replace(/(\d)\s*–\s*(?=[\d+−-])/g, '$1' + NB + '–' + NB); } // ranges inside plan text
   function rangeText(m) {
     var r = state.ranges;
     if (m.k === 'tc') return '≤ FC + ' + numStr(r.cc.hi) + ' ppm';
     if (m.norange || !r[m.k]) return 'n/a';
-    var sep = r[m.k].lo < 0 ? ' to ' : '–';
-    return numStr(r[m.k].lo) + sep + numStr(r[m.k].hi) + (m.unit ? ' ' + m.unit : '');
+    return rangeStr(r[m.k].lo, r[m.k].hi) + (m.unit ? NB + m.unit : '');
   }
   function deltaText(d, m) {
     if (d === null) return '—';
@@ -195,7 +202,7 @@
   function actionText(t, m, s) {
     var r = state.ranges;
     if (m.k === 'cc') return s.dir === 'high' ? 'Lower to ≤ ' + numStr(r.cc.hi) : 'Retest: TC below FC';
-    var rr = r[m.k], range = m.k === 'lsi' ? numStr(rr.lo) + ' to ' + (rr.hi > 0 ? '+' : '') + numStr(rr.hi) : numStr(rr.lo) + '–' + numStr(rr.hi);
+    var rr = r[m.k], range = rangeStr(rr.lo, rr.hi, m.k === 'lsi');
     return (s.dir === 'low' ? 'Raise to ' : 'Lower to ') + range;
   }
   function miniGauge(t, m) {
@@ -242,7 +249,7 @@
     row.addEventListener('click', function () {
       var open = row.getAttribute('aria-expanded') !== 'true';
       row.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if (open) area.removeAttribute('hidden'); else area.setAttribute('hidden', '');
+      if (open) { area.removeAttribute('hidden'); centreBands(); } else area.setAttribute('hidden', '');
       hft.textContent = open ? 'Hide steps' : 'How to fix'; hfa.textContent = (open ? '▴' : '▾') + VS;
     });
     return [row, area];
@@ -296,7 +303,7 @@
   // ---------- Treatment plan ----------
   // "**…**" in plan text marks an amount or duration: rendered in --c-dose, weight 600, never split.
   function richInto(node, txt) {
-    String(txt).split('**').forEach(function (part, i) {
+    spaceRanges(txt).split('**').forEach(function (part, i) {
       if (part) node.appendChild(i % 2 ? el('span', { class: 'dose', text: part }) : document.createTextNode(part));
     });
     return node;
@@ -390,13 +397,13 @@
   // CURRENT tiles share one width and TARGET tiles share one width. Extra width is split evenly, so text stays glyph-centred.
   function prepTiles(tp) {
     if (tp.dataset.done) return;
-    tp.querySelectorAll('.tpl').forEach(function (l) { l.style.transform = 'translateY(' + capOffset(getComputedStyle(l)).toFixed(2) + 'px)'; });
+    tp.querySelectorAll('.tpl').forEach(function (l) { l.style.transform = 'translateY(' + capOffset(l).toFixed(2) + 'px)'; });
     tp.querySelectorAll('.tile').forEach(function (tl) {
       var tin = tl.firstChild, parts = tin.querySelectorAll('.tv, .tu'), first = parts[0], last = parts[parts.length - 1];
       // bearings of the first and last glyph alone (canvas ignores tabular-nums, which widens "." and "–")
-      tl.dataset.pl = 10 - ink(getComputedStyle(first), first.textContent.charAt(0)).l;
-      tl.dataset.pr = 10 - ink(getComputedStyle(last), last.textContent.slice(-1)).r;
-      tin.style.transform = 'translateY(' + capOffset(getComputedStyle(tin.querySelector('.tv:not(.tmk)'))).toFixed(2) + 'px)';
+      tl.dataset.pl = 8 - ink(getComputedStyle(first), first.textContent.charAt(0)).l;
+      tl.dataset.pr = 8 - ink(getComputedStyle(last), last.textContent.slice(-1)).r;
+      tin.style.transform = 'translateY(' + capOffset(tin).toFixed(2) + 'px)';
     });
     tp.dataset.done = '1';
   }
@@ -429,7 +436,7 @@
       });
     }
     if (inl) {
-      var y = (capMid(heads[0].querySelector('.pt2')) - 14).toFixed(2) + 'px';
+      var y = (capMid(heads[0].querySelector('.pt2')) - 12).toFixed(2) + 'px'; // tile 24px: centre 12px below its top
       heads.forEach(function (h) { h.style.setProperty('--tp-y', y); h.classList.add('inl'); });
     } else {
       var w = max(function () { return true; });
@@ -444,20 +451,24 @@
   }
   // Centre band labels on the band's middle by their visible glyphs (cap height), not the text box.
   var capCache = {};
-  function capOffset(cs) {
-    var key = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  // Offset that puts an element's cap-height centre on its line box's middle: the baseline is read from layout
+  // (zero-size inline-block probe), the cap height from the font at 10x (ink bounds are rounded at 1x).
+  function capOffset(e) {
+    var cs = getComputedStyle(e), key = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.lineHeight + ' ' + cs.fontFamily;
     if (capCache[key] === undefined) {
-      var c = document.createElement('canvas').getContext('2d'); c.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
-      var mt = c.measureText('STEP0123456789'), fa = mt.fontBoundingBoxAscent, fd = mt.fontBoundingBoxDescent, cap = mt.actualBoundingBoxAscent;
-      var lh = 28, base = (lh - (fa + fd)) / 2 + fa; // baseline within a 28px line box
-      capCache[key] = 14 - (base - cap / 2);
+      var c = document.createElement('canvas').getContext('2d'); c.font = cs.fontWeight + ' ' + (parseFloat(cs.fontSize) * 10) + 'px ' + cs.fontFamily;
+      var cap = c.measureText('STEP0123456789').actualBoundingBoxAscent / 10;
+      var pr = el('span', { style: 'display:inline-block;width:0;height:0;vertical-align:baseline' });
+      e.appendChild(pr); var base = pr.getBoundingClientRect().top - e.getBoundingClientRect().top; e.removeChild(pr);
+      if (!e.getBoundingClientRect().height) return 0; // not laid out (hidden): measured on the next pass
+      capCache[key] = parseFloat(cs.lineHeight) / 2 - (base - cap / 2);
     }
     return capCache[key];
   }
   function centreBands() {
     document.querySelectorAll('.sb > .sbl, .sb > .sbr').forEach(function (e) {
       var ref = e.classList.contains('sbr') ? (e.querySelector('.rd') || e) : e;
-      e.style.transform = 'translateY(' + capOffset(getComputedStyle(ref)).toFixed(2) + 'px)';
+      e.style.transform = 'translateY(' + capOffset(ref).toFixed(2) + 'px)';
     });
   }
   function weeklyRows(list) {
@@ -641,7 +652,7 @@
       row.appendChild(g);
       if ((t.plan && (t.plan.steps || []).length) || t.notes) {
         var det = el('details', null, [el('summary', { text: 'Treatment plan' })]);
-        det.addEventListener('toggle', function () { if (det.open) layoutTiles(); });
+        det.addEventListener('toggle', function () { if (det.open) { centreBands(); layoutTiles(); } });
         if (t.plan) planNodes(t).forEach(function (n) { det.appendChild(n); });
         if (t.notes) det.appendChild(el('p', { class: 'rec dim', text: 'Notes: ' + t.notes }));
         row.appendChild(det);
