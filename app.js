@@ -1,4 +1,4 @@
-/* Pool tracker: page rendering. Data comes only from data/tests.json and (optional) data/ranges.json. */
+/* Pool tracker: page rendering. Data comes only from data/tests.json and (optional) data/ranges.json. Loaded as app.js?v=<hash> (tools/version-assets.sh). */
 (function () {
   'use strict';
   var C = window.PoolCalc;
