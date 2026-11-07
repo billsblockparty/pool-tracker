@@ -70,11 +70,12 @@
     return el('span', { class: 'tname' }, [el('span', { class: 'full', text: m.name }), el('span', { class: 'abbr', text: m.short })]);
   }
   // Status shape: circle = in range / no range, diamond = slightly out, square = well out.
-  function shape(level, cx, cy) {
-    var c = 'pt pt-' + level;
-    if (level === 'warn') return sv('polygon', { class: c, points: [[cx, cy - 6], [cx + 6, cy], [cx, cy + 6], [cx - 6, cy]].map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') });
-    if (level === 'bad') return sv('rect', { class: c, x: (cx - 4.5).toFixed(2), y: (cy - 4.5).toFixed(2), width: 9, height: 9 });
-    return sv('circle', { class: c, cx: cx, cy: cy, r: 4.5 });
+  function shape(level, cx, cy, z) {
+    z = z || { r: 4.5, d: 6, s: 9 };
+    var c = 'pt pt-' + level, d = z.d, h = z.s / 2;
+    if (level === 'warn') return sv('polygon', { class: c, points: [[cx, cy - d], [cx + d, cy], [cx, cy + d], [cx - d, cy]].map(function (p) { return p[0].toFixed(2) + ',' + p[1].toFixed(2); }).join(' ') });
+    if (level === 'bad') return sv('rect', { class: c, x: (cx - h).toFixed(2), y: (cy - h).toFixed(2), width: z.s, height: z.s });
+    return sv('circle', { class: c, cx: cx, cy: cy, r: z.r });
   }
   function hasAny(k) { return state.tests.some(function (t) { return C.value(t, k) !== null; }); }
 
@@ -171,99 +172,85 @@
       distN: dist === null ? null : C.fmt(Math.round(dist * 1e6) / 1e6, m.dp),
       dist: dist === null ? null : C.fmt(Math.round(dist * 1e6) / 1e6, m.dp) + (s.dir === 'high' ? ' high' : ' low') };
   }
-  // ---------- Latest results v3: grouped blocks ----------
+  // ---------- Latest results v4: action-first ----------
   var LNAME = { fc: ['Free chlorine', 'FC'], tc: ['Total chlorine', 'TC'], cc: ['Combined chlorine', 'CC'], ph: ['pH', null],
     ta: ['Total alkalinity', 'TA'], ch: ['Calcium hardness', 'CH'], cya: ['Cyanuric acid', 'CYA'], lsi: ['Saturation index', 'LSI'],
     fe: ['Iron', 'Fe'], cu: ['Copper', 'Cu'], po4: ['Phosphates', 'PO₄'], salt: ['Salt', null], temp: ['Water temperature', null] };
-  var GROUPS = [['Sanitiser', ['fc', 'tc', 'cc']], ['Water balance', ['ph', 'ta', 'ch', 'cya', 'lsi']], ['Metals & minerals', ['fe', 'cu', 'po4', 'salt', 'temp']]];
+  var ORDER = ['fc', 'cc', 'ph', 'ta', 'ch', 'cya', 'lsi', 'fe', 'cu', 'po4', 'salt'];
   var MBY = {}; MEAS.forEach(function (m) { MBY[m.k] = m; });
+  var MINI = { r: 4.5, d: 6, s: 8 };
 
-  function phrase(info) {
-    var s = info.s;
-    var words = s.level === 'ok' ? 'In range' : (s.dir === 'low' ? 'Low' : 'High') + ' by ' + info.distN;
-    return el('span', { class: 'sp st-' + s.level }, [el('span', { class: 'ico', 'aria-hidden': 'true', text: ICON[s.level] }), words]);
+  function nameEl(cls, k) {
+    var nm = LNAME[k], e = el('span', { class: cls }, [nm[0]]);
+    if (nm[1]) e.appendChild(el('span', { class: 'ab', text: ' (' + nm[1] + ')' }));
+    return e;
   }
-  function block(t, prev, m) {
-    var nm = LNAME[m.k], b = el('div', { class: 'blk' });
-    var name = el('span', { class: 'bn' }, [nm[0]]);
-    if (nm[1]) name.appendChild(el('span', { class: 'ab', text: ' (' + nm[1] + ')' }));
-    var right = null, v = C.value(t, m.k), info = null;
-    if (m.k === 'temp') {
-      right = v === null ? el('span', { class: 'rt dim', text: 'not recorded' }) : el('span', { class: 'rt' }, [C.show(t, m), el('span', { class: 'ru', text: m.unit })]);
-    } else if (v === null) {
-      right = el('span', { class: 'rt dim', text: m.k === 'lsi' ? 'needs water temp' : 'not recorded' });
-    } else {
-      info = barInfo(t, m);
-      right = phrase(info);
-    }
-    b.appendChild(el('div', { class: 'l1' }, [name, right]));
-    if (info) {
-      var svg = sv('svg', { class: 'lbar', height: 48, role: 'img', 'aria-label': nm[0] + ' ' + C.show(t, m) + (m.unit ? ' ' + m.unit : '') + ', ideal ' + rangeText(m) });
-      svg.__info = info; svg.__val = C.show(t, m); svg.__unit = m.unit || '';
-      b.appendChild(svg);
-      var d = C.delta(t, prev, m.k);
-      if (d !== null) b.appendChild(el('div', { class: 'l3', text: (Math.abs(d) < 1e-9 ? '= 0' : deltaText(d, m)) + ' since ' + dShort(prev.date) }));
-    }
-    return b;
+  function readingEl(cls, t, m) {
+    var e = el('span', { class: cls }, [C.show(t, m)]);
+    if (m.unit) e.appendChild(el('span', { class: 'u', text: m.unit }));
+    return e;
   }
-  var INSET = 7, TY = 22; // marker room at track ends; track top
-  function drawBars() {
-    fillGrids();
-    document.querySelectorAll('#latest svg.lbar').forEach(function (svg) {
-      var info = svg.__info, W = Math.round(svg.getBoundingClientRect().width);
-      while (svg.firstChild) svg.removeChild(svg.firstChild);
-      if (!info || W <= 0) return;
-      svg.setAttribute('viewBox', '0 0 ' + W + ' 48');
-      var x0 = INSET, x1 = W - INSET, tw = x1 - x0, cy = TY + 4;
-      var X = function (f) { return x0 + f * tw; };
-      svg.appendChild(sv('rect', { class: 'track', x: x0, y: TY, width: tw, height: 8, rx: 4 }));
-      var bl = X(Z.lo), br = X(Z.hi);
-      svg.appendChild(sv('rect', { class: 'band', x: bl.toFixed(2), y: TY, width: (br - bl).toFixed(2), height: 8 }));
-      var LY = TY + 8 + 12;
-      var L = sv('text', { class: 'blab', x: bl.toFixed(2), y: LY, 'text-anchor': 'middle', text: info.loL });
-      var R = sv('text', { class: 'blab', x: br.toFixed(2), y: LY, 'text-anchor': 'middle', text: info.hiL });
-      svg.appendChild(L); svg.appendChild(R);
-      var lw = L.getComputedTextLength(), rw = R.getComputedTextLength();
-      if (bl - lw / 2 < x0) { L.setAttribute('x', x0); L.setAttribute('text-anchor', 'start'); }
-      if (br + rw / 2 > x1) { R.setAttribute('x', x1); R.setAttribute('text-anchor', 'end'); }
-      svg.__merged = false;
-      if ((br - rw / 2) - (bl + lw / 2) < 8) {
-        svg.removeChild(L); svg.removeChild(R); svg.__merged = true;
-        svg.appendChild(sv('text', { class: 'blab', x: ((bl + br) / 2).toFixed(2), y: LY, 'text-anchor': 'middle', text: info.loL + '–' + info.hiL }));
-      }
-      var mx = X(info.f);
-      svg.appendChild(shape(info.s.level, mx, cy));
-      if (info.pin) svg.appendChild(sv('text', { class: 'pin', x: info.pin === 'hi' ? x1 : x0, y: LY, 'text-anchor': 'middle', text: (info.pin === 'hi' ? '▶' : '◀') + VS }));
-      // reading label above the marker: baseline 4px above the track top, kept inside the bar ends
-      var rl = sv('text', { x: 0, y: TY - 4, 'text-anchor': 'start' });
-      var tv = sv('tspan', { class: 'rv', text: svg.__val }); rl.appendChild(tv);
-      if (svg.__unit) { var tu = sv('tspan', { class: 'ru2', dx: 3, text: svg.__unit }); rl.appendChild(tu); }
-      svg.appendChild(rl);
-      var w = rl.getComputedTextLength() + (svg.__unit ? 3 : 0);
-      var lx = info.pin === 'hi' ? W - w : info.pin === 'lo' ? 0 : Math.max(0, Math.min(W - w, mx - w / 2));
-      rl.setAttribute('x', lx.toFixed(2));
-      svg.__label = { w: w, x: lx, mx: mx };
-    });
+  function actionText(t, m, s) {
+    var r = state.ranges;
+    if (m.k === 'cc') return s.dir === 'high' ? 'Lower to ≤ ' + numStr(r.cc.hi) : 'Retest: TC below FC';
+    var rr = r[m.k], range = m.k === 'lsi' ? numStr(rr.lo) + ' to ' + (rr.hi > 0 ? '+' : '') + numStr(rr.hi) : numStr(rr.lo) + '–' + numStr(rr.hi);
+    return (s.dir === 'low' ? 'Raise to ' : 'Lower to ') + range;
   }
-  // Blank panel cells so a group's last grid row never shows divider colour.
-  function fillGrids() {
-    document.querySelectorAll('#latest .lgrid').forEach(function (g) {
-      g.querySelectorAll('.fill').forEach(function (f) { g.removeChild(f); });
-      var cols = getComputedStyle(g).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
-      var n = g.querySelectorAll('.blk').length, k = (cols - n % cols) % cols;
-      for (var i = 0; i < k; i++) g.appendChild(el('div', { class: 'fill', 'aria-hidden': 'true' }));
-    });
+  function miniGauge(t, m) {
+    var info = barInfo(t, m);
+    var g = sv('svg', { class: 'mg', viewBox: '0 0 96 14', width: 96, height: 14, 'aria-hidden': 'true' });
+    var x0 = 6, tw = 84, X = function (f) { return x0 + f * tw; };
+    g.appendChild(sv('rect', { class: 'track', x: x0, y: 4, width: tw, height: 6, rx: 3 }));
+    g.appendChild(sv('rect', { class: 'band', x: X(Z.lo).toFixed(2), y: 4, width: (X(Z.hi) - X(Z.lo)).toFixed(2), height: 6 }));
+    g.appendChild(shape(info.s.level, X(info.f), 7, MINI));
+    return g;
+  }
+  function needRow(t, prev, m, s) {
+    var row = el('div', { class: 'nr' });
+    row.appendChild(nameEl('nn', m.k));
+    row.appendChild(readingEl('nv', t, m));
+    row.appendChild(el('span', { class: 'na st-' + s.level }, [el('span', { class: 'mk', 'aria-hidden': 'true', text: ICON[s.level] }), actionText(t, m, s)]));
+    row.appendChild(miniGauge(t, m));
+    var d = C.delta(t, prev, m.k);
+    if (d !== null) row.appendChild(el('span', { class: 'nc', text: (Math.abs(d) < 1e-9 ? '= 0' : deltaText(d, m)) + ' since ' + dShort(prev.date) }));
+    return row;
+  }
+  function lineRow(left, right) { return el('div', { class: 'ir' }, [left, right]); }
+  function section(title, rows) {
+    return el('div', { class: 'sec' }, [el('h3', { class: 'sec-h', text: title })].concat(rows));
+  }
+  function drawBars() { // mark slot: width of "!!" + 4px, so action words start at one x
+    var probe = document.querySelector('#latest .na .mk');
+    if (!probe) return;
+    var s = el('span', { class: 'na', style: 'position:absolute;visibility:hidden', text: '!!' });
+    document.body.appendChild(s);
+    $('latest').style.setProperty('--mk', (Math.ceil(s.getBoundingClientRect().width) + 4) + 'px');
+    document.body.removeChild(s);
   }
 
   function renderLatest(latest, prev) {
     var host = $('latest'); clear(host);
-    $('latest-when').textContent = latest ? dLong(latest.date) + (latest.time ? ' · ' + tFmt(latest.time) : '') + (prev ? ' · change vs ' + dShort(prev.date) : '') : '';
+    $('latest-when').textContent = latest ? dLong(latest.date) + (latest.time ? ' · ' + tFmt(latest.time) : '') : '';
     if (!latest) return;
-    GROUPS.forEach(function (g) {
-      var grid = el('div', { class: 'lgrid' });
-      g[1].forEach(function (k) { grid.appendChild(block(latest, prev, MBY[k])); });
-      host.appendChild(el('div', { class: 'grp' }, [el('h3', { class: 'grp-h', text: g[0] }), grid]));
+    var r = state.ranges, bad = [], warn = [], ok = [];
+    ORDER.forEach(function (k) {
+      var m = MBY[k]; if (C.value(latest, k) === null) return;
+      var s = C.status(latest, k, r);
+      (s.level === 'bad' ? bad : s.level === 'warn' ? warn : ok).push([m, s]);
     });
+    var need = bad.concat(warn);
+    var colA = el('div', { class: 'col-a' }), colB = el('div', { class: 'col-b' });
+    colA.appendChild(need.length ? section('Needs attention · ' + need.length, need.map(function (x) { return needRow(latest, prev, x[0], x[1]); }))
+      : el('div', { class: 'sec' }, [el('div', { class: 'allok', text: 'Everything in range ✓' + VS })]));
+    if (ok.length) colB.appendChild(section('In range · ' + ok.length, ok.map(function (x) {
+      var rd = readingEl('iv', latest, x[0]); rd.appendChild(el('span', { class: 'okm', text: ' ✓' + VS }));
+      return lineRow(nameEl('in', x[0].k), rd);
+    })));
+    var info = [lineRow(nameEl('in', 'tc'), C.value(latest, 'tc') === null ? el('span', { class: 'iv dim', text: 'not recorded' }) : readingEl('iv', latest, MBY.tc))];
+    if (C.value(latest, 'temp') !== null) info.push(lineRow(nameEl('in', 'temp'), readingEl('iv', latest, MBY.temp)));
+    else info.push(lineRow(el('span', { class: 'in', text: 'Water temp and LSI' }), el('span', { class: 'iv dim', text: 'not recorded' })));
+    colB.appendChild(section('Info', info));
+    host.appendChild(el('div', { class: 'lv4' }, [colA, colB]));
     drawBars();
   }
 

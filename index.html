@@ -90,30 +90,31 @@ th.num { text-align: right; }
 @media (max-width: 400px) { th, td { padding-left: 6px; padding-right: 6px; } }
 .derived .tname { color: var(--c-text-dim); }
 
-/* Latest results v3: grouped measurement blocks */
-.grp + .grp .grp-h { border-top: var(--b-row); }
-.grp-h { margin: 0; padding: var(--s3) var(--s3) var(--s1); font-size: var(--f-sm); font-weight: 600; color: var(--c-text-dim); }
-.lgrid { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--c-divider); border-top: var(--b-row); }
-@media (min-width: 900px) { .lgrid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1400px) { .lgrid { grid-template-columns: repeat(3, 1fr); } }
-.blk { background: var(--c-panel); padding: var(--s3); min-width: 0; }
-@media (max-width: 400px) { .blk { padding-left: var(--s2); padding-right: var(--s2); } }
-.blk .l1 { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); }
-.blk .bn { font-size: var(--f-md); font-weight: 600; color: var(--c-text); white-space: nowrap; }
-.blk .ab { font-weight: 400; color: var(--c-text-dim); }
-.blk .sp { font-size: var(--f-sm); font-weight: 600; white-space: nowrap; }
-.blk .sp .ico { min-width: 0; margin-right: 4px; }
-.blk .rt { font-size: var(--f-sm); white-space: nowrap; color: var(--c-text); font-variant-numeric: tabular-nums; }
-.blk .rt.dim { color: var(--c-text-dim); }
-.blk .ru { font-size: var(--f-xs); color: var(--c-text-dim); margin-left: 3px; }
-.blk svg.lbar { display: block; width: 100%; height: 48px; margin-top: 6px; overflow: visible; }
-.lbar .track { fill: var(--c-divider); }
-.lbar .band { fill: var(--c-band); }
-.lbar .blab, .lbar .pin { fill: var(--c-text-dim); font: 400 var(--f-xs) var(--font); font-variant-numeric: tabular-nums; }
-.lbar .rv { fill: var(--c-text); font: 600 var(--f-sm) var(--font); font-variant-numeric: tabular-nums; }
-.lbar .ru2 { fill: var(--c-text-dim); font: 400 var(--f-xs) var(--font); }
-.blk .l3 { font-size: var(--f-xs); line-height: 11px; color: var(--c-text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; margin-top: -0.5px; }
-.lgrid .fill { background: var(--c-panel); }
+/* Latest results v4: action-first */
+.lv4 { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .lv4 { grid-template-columns: 1.4fr 1fr; } .lv4 .col-b { border-left: var(--b-row); } }
+.sec-h { margin: 0; padding: var(--s3) var(--s3) 6px; font-size: var(--f-sm); font-weight: 600; color: var(--c-text-dim); white-space: nowrap; }
+.sec + .sec .sec-h { border-top: var(--b-row); }
+@media (max-width: 899px) { .lv4 .col-b .sec:first-child .sec-h { border-top: var(--b-row); } }
+.nr { display: grid; grid-template-columns: 1fr auto; column-gap: var(--s3); row-gap: 2px; align-items: baseline; padding: 10px var(--s3); }
+.nr + .nr, .ir + .ir { border-top: var(--b-row); }
+.nn, .in { white-space: nowrap; color: var(--c-text); }
+.nn { font-size: var(--f-md); font-weight: 600; }
+.in { font-size: 14px; font-weight: 400; }
+.ab { font-weight: 400; color: var(--c-text-dim); }
+.nv { font-size: 17px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.iv { font-size: 14px; font-weight: 500; color: var(--c-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.u { font-size: var(--f-xs); font-weight: 400; color: var(--c-text-dim); margin-left: 3px; }
+.okm { color: var(--c-ok); }
+.na { font-size: var(--f-sm); font-weight: 600; white-space: nowrap; align-self: center; }
+.na .mk { display: inline-block; width: var(--mk, 18px); }
+svg.mg { display: block; width: 96px; height: 14px; margin-right: -6px; justify-self: end; align-self: center; overflow: visible; }
+.mg .track { fill: var(--c-divider); }
+.mg .band { fill: var(--c-band); }
+.nc { grid-column: 1 / -1; font-size: var(--f-xs); color: var(--c-text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ir { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); padding: 7px var(--s3); }
+.iv.dim { font-size: var(--f-sm); font-weight: 400; color: var(--c-text-dim); }
+.allok { padding: var(--s3); font-size: var(--f-md); font-weight: 600; color: var(--c-ok); }
 
 /* Trend charts */
 .charts { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1px; background: var(--c-divider);
