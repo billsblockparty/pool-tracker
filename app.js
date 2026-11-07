@@ -322,10 +322,13 @@
     });
     b.appendChild(list);
     if ((step.notes || []).length) {
-      var nb = el('div', { class: 'nts' });
+      // Consecutive notes of the same kind share one label; later ones keep the label column empty so all texts share one left edge.
+      var nb = el('div', { class: 'nts' }), grp = null, last = null;
       step.notes.forEach(function (n) {
-        var p = el('p', { class: 'nt' }, [el('span', { class: 'ntl', text: n.kind === 'safety' ? 'Before swimming: ' : 'Good to know: ' })]);
-        nb.appendChild(richInto(p, n.text));
+        if (n.kind !== last) { grp = el('div', { class: 'ntg' }); nb.appendChild(grp); }
+        grp.appendChild(el('span', { class: 'ntl', text: n.kind === last ? '' : (n.kind === 'safety' ? 'Before swimming:' : 'Good to know:') }));
+        grp.appendChild(richInto(el('p', { class: 'nt' }), n.text));
+        last = n.kind;
       });
       b.appendChild(nb);
     }
