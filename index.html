@@ -122,23 +122,26 @@ svg.mg { display: block; width: 96px; height: 14px; margin-right: -6px; justify-
 button.nr { width: 100%; min-height: 44px; margin: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 button.nr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: -2px; }
 .hf { font-size: var(--f-sm); font-weight: 600; color: var(--c-accent); white-space: nowrap; }
-.fix { background: var(--c-page); padding: var(--s3) var(--s3) var(--s3) calc(var(--s3) + 20px); }
+.hfa { margin-left: 4px; }
+.fix { background: var(--c-page); padding: 0; }
+.fix .fxc { padding: var(--s3) var(--s3) 16px calc(var(--s3) + 20px); }
 .fix[hidden] { display: none; }
-.fix .fx-h { font-size: var(--f-sm); color: var(--c-text-dim); margin: 0 0 6px; }
 .fix .fx-msg { font-size: var(--f-md); color: var(--c-text-dim); margin: 0; }
 .fix .fx-link { display: inline-block; margin-top: 6px; padding: 0; border: 0; background: transparent; font: 600 var(--f-sm) var(--font); color: var(--c-accent); cursor: pointer; min-height: 24px; }
 .fix .fx-link:focus-visible, .fix + .nr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
 
 /* Treatment plan: step component (plan panel, History, How to fix) */
-.ps { display: grid; grid-template-columns: 20px 1fr auto; column-gap: 0; padding: 10px var(--s3); }
-.ps + .ps { border-top: var(--b-row); }
-.ps .pn { font-size: var(--f-md); font-weight: 600; color: var(--c-text-dim); align-self: baseline; }
-.ps .pt2 { font-size: 17px; font-weight: 600; color: var(--c-text); align-self: baseline; padding-right: var(--s3); }
-.ps .pr { align-self: baseline; white-space: nowrap; text-align: right; }
+.ps { padding: 0; }
+.sb { display: flex; align-items: center; height: 28px; padding: 0 var(--s3); background: var(--c-divider); }
+.sbl { font-size: var(--f-xs); font-weight: 600; color: var(--c-text); text-transform: uppercase; letter-spacing: 0.16em; line-height: 28px; white-space: nowrap; margin-right: calc(14px - 0.16em); }
+.sbrule { flex: 1 1 auto; min-width: 40px; height: 2px; background: var(--c-text-dim); margin-right: 14px; }
+.sbr { line-height: 28px; white-space: nowrap; }
+.sbm { font-size: var(--f-xs); color: var(--c-text-dim); }
 .pr .mk2 { font-size: var(--f-sm); font-weight: 600; margin-right: 4px; }
-.pr .rd { font-size: 17px; font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
-.ps .pb { grid-column: 2 / -1; margin-top: 8px; }
-.ps.ps-nr { grid-template-columns: 20px 1fr; }
+.pr .rd { font-size: var(--f-sm); font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
+.ps .sc { padding: var(--s3) var(--s3) 16px; }
+.ps .pt2 { font-size: 17px; font-weight: 600; color: var(--c-text); }
+.ps .pb { margin-top: 8px; }
 .pb p { margin: 0; }
 .ck { list-style: none; margin: 0; padding: 0; }
 .cki { display: grid; grid-template-columns: 24px 1fr; }
@@ -166,7 +169,7 @@ button.nr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: -2
   .pl2 .col-b { border-left: var(--b-row); }
   #plan .pl2 .col-b > .sec-h:first-child { border-top: 0; }
 }
-.hist-row details .ps { padding-left: 0; padding-right: 0; }
+.hist-row details .ps { margin: 0 calc(-1 * var(--s3)); }
 .hist-row details .wk-r, .hist-row details .wk-n { padding-left: 0; padding-right: 0; }
 .hist-row details .sec-h { padding-left: 0; padding-right: 0; border-top: 0; }
 .ir { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); padding: 7px var(--s3); }
@@ -286,7 +289,7 @@ footer a { color: var(--c-accent); }
 
   <footer>Design notes: <a href="DESIGN.md">DESIGN.md</a></footer>
 </div>
-<script src="calc.js?v=2939cf86"></script>
-<script src="app.js?v=2939cf86"></script>
+<script src="calc.js?v=bf332f87"></script>
+<script src="app.js?v=bf332f87"></script>
 </body>
 </html>

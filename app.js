@@ -89,6 +89,7 @@
     renderRec(latest);
     renderCharts();
     renderHistory();
+    centreBands();
     var n = $('notice');
     if (!state.loaded) return;
     if (!tests.length) { n.hidden = false; n.textContent = 'No tests recorded yet.'; } else n.hidden = true;
@@ -210,15 +211,16 @@
     var steps = (t.plan && t.plan.steps) || [], step = null;
     steps.forEach(function (s) { if (s.key === k) step = s; });
     if (step) {
-      area.appendChild(el('p', { class: 'fx-h', text: 'Step ' + step.n + ' of ' + steps.length + ' · from ' + dShort(t.date) + ' test' }));
-      area.appendChild(stepBody(step));
+      area.appendChild(band('Step ' + step.n + ' of ' + steps.length, el('span', { class: 'sbr sbm', text: 'from ' + dShort(t.date) + ' test' })));
+      var body = el('div', { class: 'fxc' }, [stepBody(step)]);
       var link = el('button', { type: 'button', class: 'fx-link', text: 'See full plan' });
       link.addEventListener('click', function () {
         var hd = $('h-rec'); $('rec-panel').scrollIntoView({ block: 'start' }); hd.focus({ preventScroll: true });
       });
-      area.appendChild(link);
+      body.appendChild(link);
+      area.appendChild(body);
     } else {
-      area.appendChild(el('p', { class: 'fx-msg', text: (k === 'fe' || k === 'cu') ? 'No store step for this. Metal treatments are left out on purpose.' : 'No store step for this in the latest plan.' }));
+      area.appendChild(el('div', { class: 'fxc' }, [el('p', { class: 'fx-msg', text: (k === 'fe' || k === 'cu') ? 'No store step for this. Metal treatments are left out on purpose.' : 'No store step for this in the latest plan.' })]));
     }
     return area;
   }
@@ -230,7 +232,8 @@
     row.appendChild(readingEl('nv', t, m));
     row.appendChild(el('span', { class: 'na st-' + s.level }, [el('span', { class: 'mk', 'aria-hidden': 'true', text: ICON[s.level] }), actionText(t, m, s)]));
     row.appendChild(miniGauge(t, m));
-    var hf = el('span', { class: 'hf', text: 'How to fix ▾' + VS });
+    var hft = el('span', { text: 'How to fix' }), hfa = el('span', { class: 'hfa', 'aria-hidden': 'true', text: '▾' + VS });
+    var hf = el('span', { class: 'hf' }, [hft, hfa]);
     row.appendChild(hf);
     var d = C.delta(t, prev, m.k);
     row.appendChild(el('span', { class: 'nc', text: d === null ? '' : (Math.abs(d) < 1e-9 ? '= 0' : deltaText(d, m)) + ' since ' + dShort(prev.date) }));
@@ -239,7 +242,7 @@
       var open = row.getAttribute('aria-expanded') !== 'true';
       row.setAttribute('aria-expanded', open ? 'true' : 'false');
       if (open) area.removeAttribute('hidden'); else area.setAttribute('hidden', '');
-      hf.textContent = open ? '▴' + VS + ' Hide steps' : 'How to fix ▾' + VS;
+      hft.textContent = open ? 'Hide steps' : 'How to fix'; hfa.textContent = (open ? '▴' : '▾') + VS;
     });
     return [row, area];
   }
@@ -330,18 +333,43 @@
   }
   function markReading(t, k) {
     var m = MBY[k], v = C.value(t, k);
-    if (v === null) return el('span', { class: 'pr' }, [el('span', { class: 'rd dim', text: '—' })]);
+    if (v === null) return el('span', { class: 'sbr pr' }, [el('span', { class: 'rd dim', text: '—' })]);
     var s = C.status(t, k, state.ranges);
-    var e = el('span', { class: 'pr' }, [el('span', { class: 'mk2 st-' + s.level, 'aria-hidden': 'true', text: ICON[s.level] })]);
+    var e = el('span', { class: 'sbr pr' }, [el('span', { class: 'mk2 st-' + s.level, 'aria-hidden': 'true', text: ICON[s.level] })]);
     var rd = el('span', { class: 'rd', text: C.show(t, m) });
     if (m.unit) rd.appendChild(el('span', { class: 'u', text: m.unit }));
     e.appendChild(rd);
     return e;
   }
-  function stepRow(step, t, noReading) {
-    var kids = [el('span', { class: 'pn', text: String(step.n) }), el('span', { class: 'pt2', text: step.title })];
-    if (!noReading) kids.push(markReading(t, step.key));
-    return el('div', { class: 'ps' + (noReading ? ' ps-nr' : '') }, kids.concat([stepBody(step)]));
+  // Step header band: "STEP N" left, 2px rule across, value right (mirrors the dynasty tracker's bye line).
+  function band(leftText, right) {
+    var b = el('div', { class: 'sb' }, [el('span', { class: 'sbl', text: leftText }), el('span', { class: 'sbrule', 'aria-hidden': 'true' })]);
+    b.appendChild(right);
+    return b;
+  }
+  function stepRow(step, t) {
+    return el('div', { class: 'ps' }, [
+      band('Step ' + step.n, markReading(t, step.key)),
+      el('div', { class: 'sc' }, [el('div', { class: 'pt2', text: step.title }), stepBody(step)])
+    ]);
+  }
+  // Centre band labels on the band's middle by their visible glyphs (cap height), not the text box.
+  var capCache = {};
+  function capOffset(cs) {
+    var key = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+    if (capCache[key] === undefined) {
+      var c = document.createElement('canvas').getContext('2d'); c.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+      var mt = c.measureText('STEP0123456789'), fa = mt.fontBoundingBoxAscent, fd = mt.fontBoundingBoxDescent, cap = mt.actualBoundingBoxAscent;
+      var lh = 28, base = (lh - (fa + fd)) / 2 + fa; // baseline within a 28px line box
+      capCache[key] = 14 - (base - cap / 2);
+    }
+    return capCache[key];
+  }
+  function centreBands() {
+    document.querySelectorAll('.sb > .sbl, .sb > .sbr').forEach(function (e) {
+      var ref = e.classList.contains('sbr') ? (e.querySelector('.rd') || e) : e;
+      e.style.transform = 'translateY(' + capOffset(getComputedStyle(ref)).toFixed(2) + 'px)';
+    });
   }
   function weeklyRows(list) {
     return (list || []).map(function (w) {
@@ -352,8 +380,8 @@
     });
   }
   // History omits the step's reading: the history row already shows every reading and its status above the plan.
-  function planNodes(t, noReading) {
-    var out = (t.plan.steps || []).map(function (s) { return stepRow(s, t, noReading); });
+  function planNodes(t) {
+    var out = (t.plan.steps || []).map(function (s) { return stepRow(s, t); });
     if (t.plan.weekly && t.plan.weekly.length) out = out.concat([el('h3', { class: 'sec-h', text: 'Every week' })], weeklyRows(t.plan.weekly));
     return out;
   }
@@ -524,7 +552,7 @@
       row.appendChild(g);
       if ((t.plan && (t.plan.steps || []).length) || t.notes) {
         var det = el('details', null, [el('summary', { text: 'Treatment plan' })]);
-        if (t.plan) planNodes(t, true).forEach(function (n) { det.appendChild(n); });
+        if (t.plan) planNodes(t).forEach(function (n) { det.appendChild(n); });
         if (t.notes) det.appendChild(el('p', { class: 'rec dim', text: 'Notes: ' + t.notes }));
         row.appendChild(det);
       }
