@@ -83,3 +83,4 @@ Radius: panels 6px; tooltip 4px; stat grid inner 4px. Borders: panels 2px frame;
 - 2026-11-06: Latest results v3: grouped blocks, full names with abbreviations, status phrase with distance, reading label on the bar, change line; table, header row, distance column and unit slot removed.
 - 2026-11-06: Latest results v4: Needs attention / In range / Info sections, action phrases with targets, mini gauge, fixed mark slot; header suffix "change vs" dropped; v3 blocks and large bar retired.
 - 2026-11-06: cache-busting: script URLs versioned with a content hash (tools/version-assets.sh); no visual change.
+- 2026-11-06: added the 11/01 test (t-20261101-x, time unknown), readings verified against the paper report; 11/06 verified, unchanged.
