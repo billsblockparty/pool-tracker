@@ -437,5 +437,217 @@
         }
       ]
     }
+  },
+  {
+    "id": "t-20261116-1402",
+    "date": "2026-11-16",
+    "time": "14:02",
+    "source": "Store",
+    "score": 30,
+    "fc": 13.1,
+    "tc": 13.1,
+    "ph": 8.3,
+    "ta": 133,
+    "ch": 637,
+    "cya": 6,
+    "fe": 0.1,
+    "cu": 0.4,
+    "po4": 0,
+    "salt": 2208,
+    "nextTest": "2026-11-23",
+    "plan": {
+      "steps": [
+        {
+          "n": 1,
+          "key": "ch",
+          "title": "Lower calcium hardness",
+          "items": [
+            {
+              "kind": "do",
+              "text": "Partially drain the pool and refill it with fresh water."
+            }
+          ],
+          "notes": [
+            {
+              "kind": "tip",
+              "text": "If you drain, refill straight away and skip the other steps, unless there's algae: treat that first."
+            },
+            {
+              "kind": "tip",
+              "text": "Don't drain if the water table is high."
+            }
+          ]
+        },
+        {
+          "n": 2,
+          "key": "ta",
+          "title": "Lower alkalinity",
+          "items": [
+            {
+              "kind": "choose",
+              "lead": "Use one acid, never both:",
+              "options": [
+                {
+                  "name": "Muriatic acid",
+                  "amount": "**78 fl oz** in total",
+                  "detail": "Never more than **15 fl oz** at once."
+                },
+                {
+                  "name": "Dry acid",
+                  "amount": "**6 lb 7 oz** in total",
+                  "detail": "Never more than **1 lb 2 oz** at once."
+                }
+              ]
+            },
+            {
+              "kind": "do",
+              "text": "Add each dose to a bucket with at least **1 gallon** of pool water (acid into water, never water into acid), then pour it in with the pump running."
+            },
+            {
+              "kind": "do",
+              "text": "Retest after adding half."
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **4 hours** between doses and **4 hours** after the last one."
+            }
+          ],
+          "notes": [
+            {
+              "kind": "tip",
+              "text": "Changing alkalinity also changes pH. Retest both afterwards."
+            }
+          ]
+        },
+        {
+          "n": 3,
+          "key": "fc",
+          "title": "Lower free chlorine",
+          "items": [
+            {
+              "kind": "do",
+              "text": "With the pump running, add chlorine neutraliser: **1 lb 5 oz**."
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **30 minutes**."
+            }
+          ],
+          "notes": [
+            {
+              "kind": "safety",
+              "text": "Don't swim until free chlorine is **2–4 ppm**."
+            },
+            {
+              "kind": "tip",
+              "text": "Don't add more than this amount. Turn the salt generator down if chlorine stays high."
+            }
+          ]
+        },
+        {
+          "n": 4,
+          "key": "cya",
+          "title": "Raise stabiliser (CYA)",
+          "items": [
+            {
+              "kind": "do",
+              "text": "Clean the filter."
+            },
+            {
+              "kind": "choose",
+              "lead": "Add one of these:",
+              "options": [
+                {
+                  "name": "Liquid stabiliser",
+                  "amount": "**1 gal 31 fl oz**",
+                  "detail": "Pour into the skimmer with the pump running."
+                },
+                {
+                  "name": "Granular stabiliser",
+                  "amount": "**3 lb 5 oz**",
+                  "detail": "In two halves: mix each in a bucket of pool water, pour into the skimmer, wait **2 hours** between halves."
+                }
+              ]
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **2 hours**."
+            }
+          ],
+          "notes": [
+            {
+              "kind": "tip",
+              "text": "With granular, don't clean the filter for **72 hours**. Retest after **24 hours** (liquid) or **72 hours** (granular)."
+            }
+          ]
+        },
+        {
+          "n": 5,
+          "key": "salt",
+          "title": "Raise salt",
+          "items": [
+            {
+              "kind": "do",
+              "text": "With the pump running, pour **74 lb 4 oz** of pool salt slowly around the pool edge."
+            },
+            {
+              "kind": "do",
+              "text": "Brush the pool floor."
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **24 hours** for it to dissolve."
+            }
+          ],
+          "notes": [
+            {
+              "kind": "tip",
+              "text": "Don't add salt if the water is below **60 °F**."
+            }
+          ]
+        }
+      ],
+      "weekly": [
+        {
+          "item": "Salt generator",
+          "amount": "FC **1–4 ppm**",
+          "note": "Set the generator to hold this"
+        },
+        {
+          "item": "Shock",
+          "amount": "**10 oz**",
+          "note": null
+        },
+        {
+          "item": "Weekly maintenance treatment",
+          "amount": "**5 fl oz**",
+          "note": null
+        },
+        {
+          "item": "Algaecide",
+          "amount": "**3 fl oz**",
+          "note": "Only with heavy use, animals or debris"
+        }
+      ],
+      "claudeNotes": {
+        "overall": [
+          "Alkalinity went from **63** to **133** in one day, so the plan has flipped from raising it to lowering it. If alkalinity increaser was added after the Nov 15 test, that explains the direction, but the full Nov 15 dose would normally account for only about half this rise. Worth a retest (or asking the store) before adding all **78 fl oz** of acid; the store already says to retest after half.",
+          "Free chlorine is still high (**13.8** → **13.1**), now on a third test. Total chlorine equals free chlorine, so combined chlorine is **0** (was **1.18**). Turning the salt generator down, as step 3's tip says, should stop it climbing back after the neutraliser.",
+          "Stabiliser (CYA) is **6** (range **50–100**) and has barely moved across four tests. Until it is raised, sunlight will keep making chlorine swing."
+        ],
+        "steps": {
+          "2": [
+            "Acid lowers pH as well as alkalinity. pH is **8.3** (above **7.8**), which is why there is no separate pH step this time. Check pH after the first half."
+          ]
+        }
+      }
+    },
+    "createdAt": "2026-11-17T00:45:00Z",
+    "edits": [
+      {
+        "at": "2026-11-17T00:45:00Z",
+        "what": "Imported from the store's emailed PDF (verified); metals step left out; generic product names; chlorine neutraliser has no mapped generic name (plain description used)."
+      }
+    ]
   }
 ]
