@@ -676,5 +676,253 @@
         "what": "Imported from the store's emailed PDF (verified); metals step left out; generic product names; soda ash, stain and scale preventer and phosphate remover have no mapped generic name (plain description used)."
       }
     ]
+  },
+  {
+    "id": "t-20261118-1742",
+    "date": "2026-11-18",
+    "time": "17:42",
+    "source": "Store",
+    "score": 40,
+    "fc": 0.23,
+    "tc": 0.23,
+    "ph": 7.7,
+    "ta": 159,
+    "ch": 264,
+    "cya": 5,
+    "fe": 0.2,
+    "cu": 0.3,
+    "po4": 1100,
+    "salt": 567,
+    "nextTest": "2026-11-25",
+    "plan": {
+      "steps": [
+        {
+          "n": 1,
+          "key": "ta",
+          "title": "Lower alkalinity",
+          "items": [
+            {
+              "kind": "choose",
+              "lead": "Use one acid, never both:",
+              "options": [
+                {
+                  "name": "Muriatic acid",
+                  "amount": "**1 gal 11 fl oz** in total",
+                  "detail": "Never more than **15 fl oz** at once."
+                },
+                {
+                  "name": "Dry acid",
+                  "amount": "**11 lb 7 oz** in total",
+                  "detail": "Never more than **1 lb 2 oz** at once."
+                }
+              ]
+            },
+            {
+              "kind": "do",
+              "text": "Add each dose to a bucket with at least **1 gallon** of pool water (acid into water, never water into acid), then pour it in with the pump running."
+            },
+            {
+              "kind": "do",
+              "text": "Retest after adding half."
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **4 hours** between doses and **4 hours** after the last one."
+            }
+          ],
+          "notes": [
+            {
+              "kind": "tip",
+              "text": "Changing alkalinity also changes pH. Retest both afterwards."
+            }
+          ]
+        },
+        {
+          "n": 2,
+          "key": "fc",
+          "title": "Raise free chlorine",
+          "items": [
+            {
+              "kind": "choose",
+              "lead": "With the pump running, add one of these:",
+              "options": [
+                {
+                  "name": "Calcium hypochlorite shock (73%)",
+                  "amount": "**5 oz**",
+                  "detail": null
+                },
+                {
+                  "name": "Dichlor granules",
+                  "amount": "**6 oz**",
+                  "detail": null
+                },
+                {
+                  "name": "Liquid chlorine",
+                  "amount": "**32 fl oz**",
+                  "detail": null
+                }
+              ]
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **4 hours**."
+            }
+          ],
+          "notes": [
+            {
+              "kind": "safety",
+              "text": "Don't swim until free chlorine is **2–4 ppm**."
+            },
+            {
+              "kind": "tip",
+              "text": "Consider turning up the salt generator."
+            }
+          ]
+        },
+        {
+          "n": 3,
+          "key": "cya",
+          "title": "Raise stabiliser (CYA)",
+          "items": [
+            {
+              "kind": "do",
+              "text": "Clean the filter."
+            },
+            {
+              "kind": "choose",
+              "lead": "Add one of these:",
+              "options": [
+                {
+                  "name": "Liquid stabiliser",
+                  "amount": "**1 gal 34 fl oz**",
+                  "detail": "Pour into the skimmer with the pump running."
+                },
+                {
+                  "name": "Granular stabiliser",
+                  "amount": "**3 lb 6 oz**",
+                  "detail": "In two halves: mix each in a bucket of pool water, pour into the skimmer, wait **2 hours** between halves."
+                }
+              ]
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **2 hours**."
+            }
+          ],
+          "notes": [
+            {
+              "kind": "tip",
+              "text": "With granular, don't clean the filter for **72 hours**. Retest after **24 hours** (liquid) or **72 hours** (granular)."
+            },
+            {
+              "kind": "tip",
+              "text": "Don't add phosphate remover during this treatment."
+            }
+          ]
+        },
+        {
+          "n": 4,
+          "key": "salt",
+          "title": "Raise salt",
+          "items": [
+            {
+              "kind": "do",
+              "text": "With the pump running, pour **197 lb 0 oz** of pool salt slowly around the pool edge."
+            },
+            {
+              "kind": "do",
+              "text": "Brush the pool floor."
+            },
+            {
+              "kind": "wait",
+              "text": "Wait **24 hours** for it to dissolve."
+            }
+          ],
+          "notes": [
+            {
+              "kind": "tip",
+              "text": "Don't add salt if the water is below **60 °F**."
+            },
+            {
+              "kind": "tip",
+              "text": "The salt generator works best with salt in range and a clean cell; stain and scale preventer helps stop scale on the cell."
+            }
+          ]
+        },
+        {
+          "n": 5,
+          "key": "po4",
+          "title": "Lower phosphates",
+          "items": [
+            {
+              "kind": "do",
+              "text": "Clean the filter."
+            },
+            {
+              "kind": "do",
+              "text": "Shake the phosphate remover well and pour it into the skimmer with the pump running: **53 fl oz** in total, never more than **48 fl oz** at once."
+            },
+            {
+              "kind": "do",
+              "text": "If you need more than **48 fl oz**, clean the filter between doses."
+            },
+            {
+              "kind": "wait",
+              "text": "Run the pump for **48 hours** without backwashing or cleaning the filter, then clean or backwash it."
+            }
+          ],
+          "notes": [
+            {
+              "kind": "safety",
+              "text": "Watch the filter pressure: it can rise quickly, especially with D.E. filters."
+            },
+            {
+              "kind": "tip",
+              "text": "Once phosphates are **100 ppb** or lower, start the weekly maintenance treatment."
+            }
+          ]
+        }
+      ],
+      "weekly": [
+        {
+          "item": "Salt generator",
+          "amount": "FC **1–4 ppm**",
+          "note": "Set the generator to hold this"
+        },
+        {
+          "item": "Shock",
+          "amount": "**10 oz**",
+          "note": null
+        },
+        {
+          "item": "Weekly maintenance treatment",
+          "amount": "**5 fl oz**",
+          "note": null
+        },
+        {
+          "item": "Algaecide",
+          "amount": "**3 fl oz**",
+          "note": "Only with heavy use, animals or debris"
+        }
+      ],
+      "claudeNotes": {
+        "overall": [
+          "This sample was tested **2 minutes** after the 5:40 PM one and reads like different water: salt **567** vs **3375**, calcium **264** vs **556**, alkalinity **159** vs **24**. Calcium was **637** on Nov 16 with no drain recorded since. Worth asking the store which sample was the pool before following this plan.",
+          "Stabiliser (CYA) is **5** on both of today's samples and has read **5–6** on every test since Nov 1."
+        ],
+        "steps": {
+          "4": [
+            "Don't add salt until the reading is confirmed: **197 lb** would raise salt by about **2600 ppm**, so if the 5:40 PM reading (**3375**) is right, the pool would end up far above the **2700–3400** range."
+          ]
+        }
+      }
+    },
+    "createdAt": "2026-11-19T00:43:55Z",
+    "edits": [
+      {
+        "at": "2026-11-19T00:43:55Z",
+        "what": "Imported from the store's emailed PDF (verified); metals step left out; generic product names; soda ash, stain and scale preventer and phosphate remover have no mapped generic name (plain description used)."
+      }
+    ]
   }
 ]
